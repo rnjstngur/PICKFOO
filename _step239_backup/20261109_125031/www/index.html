@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f8f4ee"><title>PICKFOO | 같은 메뉴, 더 나은 한 끼</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="main-profile-db.css"><link rel="stylesheet" href="recommendation-score-ui.css"><script src="pickfoo-api-config.js"></script><link rel="stylesheet" href="pickfoo-splash.css"></head>
+<body>
+<script>window.PICKFOO_SPLASH_STARTED = performance.now();</script>
+<div class="pf-splash" id="pfSplash" role="status" aria-label="PICKFOO 앱을 준비하고 있습니다" aria-busy="true">
+  <div class="pf-splash__center">
+    <img class="pf-splash__icon" src="pickfoo-mark.svg" alt="" width="164" height="164" decoding="async">
+    <div class="pf-splash__brand">PICK<span>FOO</span></div>
+    <div class="pf-splash__korean">픽푸</div>
+    <p class="pf-splash__slogan">같은 메뉴, 더 나은 한 끼</p>
+  </div>
+  <div class="pf-splash__footer" aria-hidden="true">
+    <div class="pf-splash__dots"><span></span><span></span><span></span></div>
+    <span>맛있는 조합을 준비하고 있어요</span>
+  </div>
+</div>
+<div class="app-shell">
+<header class="topbar"><button class="icon-btn" id="backBtn" aria-label="뒤로">‹</button><div><div class="brand-name">PICKFOO <span>픽푸</span></div><div class="tagline">같은 메뉴, 더 나은 한 끼</div></div><button class="avatar" id="myPageBtn" aria-label="마이페이지">☺</button></header>
+<main>
+<section id="homeView" class="view active">
+  <div class="hero"><div class="eyebrow">내 조건에 맞는 조합 찾기</div><h1>오늘은 어떤 조합으로<br><em>더 맛있게</em> 먹을까요?</h1><p>흩어진 커스텀 메뉴를 한곳에서 찾고, 재료와 주문 방법까지 확인해요.</p></div>
+  <div class="search-row"><span>⌕</span><input id="searchInput" placeholder="메뉴·브랜드·재료 검색" aria-label="메뉴 검색"><button id="searchClear" aria-label="검색 지우기">×</button></div>
+  <div class="filter-row"><select id="budgetFilter" aria-label="가격대 설정"><option value="all">가격대 설정</option><option value="5000">5,000원 이하</option><option value="7000">7,000원 이하</option><option value="10000">10,000원 이하</option></select><select id="spicyFilter" aria-label="매운 단계"><option value="all">매운 단계</option><option value="0">안 매움</option><option value="1">약간 매움</option><option value="2">매움</option></select><button id="excludeBtn" class="pill">땅콩·갑각류 제외 <span>⌄</span></button></div>
+  <section class="category-section"><div class="section-heading"><div><h2>브랜드</h2><p>브랜드별 전시 추천 조합 둘러보기</p></div><span class="subtle" id="brandCount">브랜드 선택됨</span></div><div class="category-grid" id="brandCategories"></div></section>
+  <section class="category-section"><div class="section-heading"><div><h2>음식 카테고리</h2><p>먹고 싶은 종류로 찾아보기</p></div><span class="subtle">카테고리 선택</span></div><div class="category-grid food-grid" id="foodCategories"></div></section>
+  <button class="verified-toggle off" id="verifiedToggle"><span class="checkmark">✓</span><span><b>팀 선정 전시 추천 조합만 보기</b><small>전시용 선정 조합만 표시 (검증 배지 아님)</small></span><span class="verified-stat">PICKFOO 전시 추천 20개</span><span class="toggle-track" id="toggleTrack"></span></button>
+  <section class="results-section"><div class="section-heading"><div><h2 id="resultsTitle">추천 조합</h2><p id="resultsSubtitle">조건에 맞는 추천 조합</p></div><label class="sort-control">정렬 <select id="sortMode" aria-label="추천 정렬 방식"><option value="default">기본 순서</option><option value="personalized">내 취향 우선 (규칙)</option></select></label><button class="text-btn" id="resetFilters">초기화</button></div><div id="recipeGrid" class="recipe-grid"></div><div id="emptyState" class="empty-state hidden">조건에 맞는 조합이 없어요.<br>필터를 바꾸거나 다른 카테고리를 선택해 보세요.</div></section>
+  <div class="bottom-actions"><button class="primary-btn" id="uploadComboBtn">＋ 나만의 조합 등록</button><button class="secondary-btn" id="pointsBtn">P 포인트 상점</button></div>
+</section>
+<section id="detailView" class="view"><button class="back-link" data-view="homeView">‹ 목록으로</button><div id="detailContent"></div></section>
+<section id="uploadView" class="view"><button class="back-link" data-view="homeView">‹ 메인으로</button><h1 class="page-title">나만의 조합 등록</h1><p class="page-desc">내가 먹어본 조합을 공유해 주세요. 로그인 후 DB 등록 조합은 서버에 저장됩니다. 전시용 선정 조합과 실제 판매 여부는 별개이며, 구매 가능 여부를 확인하세요.</p><form id="uploadForm" class="form-card"><label>조합 이름<input required id="newName" placeholder="예: 매콤 달콤 서브웨이 조합"></label><div class="two-col"><label>브랜드<select id="newBrand"><option>스타벅스</option><option>서브웨이</option><option>CU</option><option>GS25</option><option>세븐일레븐</option><option>기타</option></select></label><label>음식 종류<select id="newCategory"><option>카페·디저트</option><option>한식</option><option>양식</option><option>일식</option><option>중식</option><option>분식</option><option>치킨</option><option>샌드위치</option><option>편의점 간편식</option></select></label></div><div class="two-col"><label>예상 가격(원)<input type="number" id="newPrice" min="0" required placeholder="5500"></label><label>매운 단계<select id="newSpicy"><option value="0">안 매움</option><option value="1">약간 매움</option><option value="2">매움</option></select></label></div><label>재료 (쉼표로 구분)<input id="newIngredients" required placeholder="빵, 치즈, 소스"></label><label>만드는 방법<textarea id="newSteps" required rows="3" placeholder="옵션 선택 방법과 조합 순서를 적어주세요."></textarea></label><button class="primary-btn full" type="submit">조합 등록하기</button></form></section>
+<section id="reviewView" class="view"><button class="back-link" data-view="detailView">‹ 조합으로 돌아가기</button><h1 class="page-title">사진 리뷰 작성</h1><p class="page-desc">전시 추천 조합의 로컬 포인트와 DB 조합의 실제 저장 포인트는 별개입니다. DB 리뷰는 사진 최초 업로드 때 10P를 한 번만 적립합니다. 사진은 실제 구매를 증명하지 않습니다.</p><form id="reviewForm" class="form-card"><input type="hidden" id="reviewRecipeId"><label>닉네임<input id="reviewNickname" required maxlength="24" placeholder="닉네임"></label><label>별점<select id="reviewRating"><option value="5">★★★★★ (5점)</option><option value="4">★★★★☆ (4점)</option><option value="3">★★★☆☆ (3점)</option><option value="2">★★☆☆☆ (2점)</option><option value="1">★☆☆☆☆ (1점)</option></select></label><label>후기<textarea id="reviewText" required rows="4" placeholder="맛, 가격, 재현하기 쉬웠는지 알려주세요."></textarea></label><label>사진 첨부<input id="reviewPhoto" type="file" accept="image/*" required></label><div id="photoPreview" class="photo-preview"></div><button class="primary-btn full" type="submit">리뷰 등록하고 10P 받기</button></form></section>
+<section id="pointsView" class="view"><button class="back-link" data-view="homeView">‹ 메인으로</button><h1 class="page-title">내 포인트</h1><div class="points-card"><span>사용 가능한 포인트</span><strong><b id="pointsBalance">0</b> P</strong><small>사진 리뷰 1건당 10P · 시제품 기준</small></div><div class="section-heading"><h2>포인트 내역</h2><span class="subtle">이 기기에 저장됨</span></div><div id="pointsHistory" class="history-list"></div><button class="primary-btn full" id="openShopBtn">포인트 상점 보기</button><p class="notice">현재 포인트는 PostgreSQL에 기록하는 시제품용 가상 포인트이며, 실제 상품권 발급·배송은 지원하지 않습니다. 시연용 로컬 포인트와 별개입니다.</p></section>
+<section id="shopView" class="view"><button class="back-link" data-view="pointsView">‹ 포인트로 돌아가기</button><h1 class="page-title">포인트 상점</h1><p class="page-desc">모은 포인트로 교환을 체험해 보세요.</p><div class="points-mini">내 포인트 <b id="shopBalance">0P</b></div><div id="shopGrid" class="shop-grid"></div><p class="notice">시제품 상품이며 실제 쿠폰 발급이나 배송은 이루어지지 않습니다.</p></section>
+<section id="myPageView" class="view"><button class="back-link" data-view="homeView">‹ 메인으로</button><h1 class="page-title">마이페이지</h1><div class="profile-card"><div class="avatar large">☺</div><div><b id="profileName">게스트</b><p>내 취향과 포인트를 확인해요.</p></div></div><form id="profileForm" class="form-card"><label>닉네임<input id="profileNickname" maxlength="24" placeholder="닉네임"></label><label>선호 음식<select id="profileFood"><option>전체</option><option>한식</option><option>양식</option><option>일식</option><option>중식</option><option>분식</option><option>카페·디저트</option></select></label><label>선호 브랜드<select id="profileBrand"><option>전체</option><option>스타벅스</option><option>서브웨이</option><option>CU</option><option>GS25</option><option>세븐일레븐</option></select></label><button class="primary-btn full" type="submit">취향 저장</button></form><button class="secondary-btn full" id="myPointsBtn">포인트 확인</button><div class="auth-actions"><a class="login-action" id="profileLoginLink" href="login.html">로그인 / 회원가입</a><a class="logout-action" id="profileLogoutBtn" href="#">로그아웃</a></div><p class="notice" id="profileAuthNotice">로그인 계정과 취향 정보는 연결된 Django 서버에 저장됩니다. 시연용 로컬 정보와 구분해 주세요.</p></section>
+</main><nav class="bottom-nav"><button class="nav-item active" data-view="homeView"><span>⌂</span>홈</button><button class="nav-item" id="navUpload"><span>＋</span>조합 등록</button><button class="nav-item" id="navPoints"><span>Ⓟ</span>포인트</button><button class="nav-item" id="navMy"><span>☺</span>마이</button></nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+
+
+<script src="recommendation.js?v=235"></script>
+<script src="app.js?v=236"></script><script src="catalog-bridge.js"></script><script src="catalog-detail.js"></script><script src="catalog-recommendation.js?v=231"></script>
+<script src="recommendation-score-ui.js"></script>
+<script src="session-db.js"></script>
+<script src="main-profile-db.js"></script>
+<!-- PICKFOO DB 메뉴 조회 버튼 -->
+<a
+    href="catalog.html"
+    class="catalog-shortcut"
+    aria-label="데이터베이스 음식 메뉴 보기"
+>
+    🍱 DB 메뉴 보기
+</a>
+
+<style>
+    .catalog-shortcut {
+        position: fixed;
+        right: 16px;
+        bottom: 90px;
+        z-index: 999;
+
+        padding: 12px 16px;
+        border-radius: 25px;
+
+        background: #ff7448;
+        color: white;
+
+        font-size: 14px;
+        font-weight: bold;
+        text-decoration: none;
+
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .catalog-shortcut:hover {
+        background: #ed6038;
+    }
+</style><script src="db-review-bridge.js?v=203"></script>
+<script src="db-points-bridge.js?v=203"></script>
+<script src="shop-search-helper.js?v=203"></script>
+<script src="pickfoo-splash.js"></script>
+<script src="curated-verification.js?v=233"></script>
+<script src="curated-trending.js?v=236"></script>
+<script src="pocketcu-product-links.js?v=238"></script>
+</body></html>

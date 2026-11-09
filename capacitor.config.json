@@ -1,0 +1,9 @@
+{
+  "appId": "com.pickfoo.app",
+  "appName": "PICKFOO",
+  "webDir": "www",
+  "server": {
+  	"url": "https://pickfoo-web-production.up.railway.app",
+  	"androidScheme": "https"
+	}
+}

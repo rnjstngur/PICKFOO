@@ -1,0 +1,8 @@
+• 모든 STEP203 기능 파일(app.js, DB 리뷰·포인트·쇼핑 도우미)을 STEP204 최신 HTML로 덮어쓰지 않고 보존
+• STEP204 웹 스플래시(index + CSS + JS + SVG)와 Android native splash 11개 통합
+• STEP204 로고 기반 Android 런처 아이콘 mdpi~xxxhdpi 생성
+• 웹 소스 www 32여 파일을 Android assets/public과 복사 동기화 (추후 cap sync 필수)
+• 개발용 Android emulator 및 phone IP 설정 제공, 배포용 기본 설정은 URL 없음
+• 실제 DB, 개인 .env, 사용자 사진, Python/node_modules/Gradle 임시파일 ZIP 제외
+
+실제 Android Studio 앱 실행/서명 APK 빌드는 SDK가 있는 PC에서 검증해야 합니다.

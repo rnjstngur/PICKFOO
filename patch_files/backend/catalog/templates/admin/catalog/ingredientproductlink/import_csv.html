@@ -1,0 +1,16 @@
+{% extends 'admin/base_site.html' %}
+{% block content %}
+<div style="max-width:790px">
+  <p>엑셀에 정리한 상품 링크를 <strong>CSV UTF-8(.csv)</strong> 형식으로 저장한 후 업로드하세요. 같은 재료명·판매처가 있으면 갱신하고, 없는 경우 새로 등록합니다.</p>
+  <p>일괄 등록은 오류가 발생하면 모두 취소됩니다. 기존 링크를 삭제하거나 비활성화하지 않습니다.</p>
+  <p><strong>필수 열:</strong> ingredient_name, provider, product_name, url<br>
+     <strong>선택 열:</strong> aliases, note, is_active (1/0)<br>
+     <strong>provider 값:</strong> pocketcu 또는 gs25</p>
+  <p>재료명과 추가 별칭은 정확히 일치하는 조합에만 적용돼요. 예: 불닭볶음면 ≠ 까르보 불닭볶음면. 검증되지 않은 상품 페이지 주소를 만들지 마세요.</p>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" class="default" value="CSV 검사 및 등록">
+    <a href="{% url 'admin:catalog_ingredientproductlink_changelist' %}" style="margin-left:15px">취소</a>
+  </form>
+</div>
+{% endblock %}

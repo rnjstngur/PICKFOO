@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>PICKFOO | STEP 183 리뷰 사진 업로드 테스트</title>
+  <style>
+    :root { color-scheme: light; --ink: #25312c; --accent: #16734c; --bg: #f5f8f4; --muted: #607268; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); font: 16px/1.65 system-ui, -apple-system, 'Malgun Gothic', sans-serif; color: var(--ink); }
+    main { max-width: 700px; padding: 30px 20px 80px; margin: 0 auto; }
+    .badge { font-size: 13px; font-weight: 750; letter-spacing: .09em; color: var(--accent); }
+    h1 { font-size: clamp(26px, 6vw, 34px); line-height: 1.3; margin: 8px 0 8px; }
+    .intro { color: var(--muted); margin: 0 0 22px; }
+    .card { background: #fff; border: 1px solid #e0e9df; border-radius: 22px; padding: 25px; box-shadow: 0 10px 35px rgba(33,76,50,.06); }
+    label { display: block; font-weight: 750; margin-top: 17px; margin-bottom: 6px; }
+    input[type="number"], input[type="file"] { display: block; width: 100%; padding: 13px; border: 1px solid #bfd1c5; border-radius: 12px; font: inherit; background: white; }
+    input[type="number"]:focus-visible, input[type="file"]:focus-visible, button:focus-visible { outline: 3px solid #9edbb9; outline-offset: 2px; }
+    .hint { color: var(--muted); font-size: 13px; margin: 5px 0 12px; }
+    button { width: 100%; padding: 14px; margin-top: 18px; border: 0; border-radius: 13px; background: var(--accent); color: white; font: inherit; font-weight: 750; cursor: pointer; }
+    button:disabled { opacity: .55; cursor: wait; }
+    .status { white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 18px; padding: 14px; border-radius: 12px; background: #f0f4f0; min-height: 54px; }
+    .status.ok { background: #e4f6ec; color: #075c3c; }
+    .status.error { background: #fff0ed; color: #9e2a1d; }
+    .photo { display: none; max-width: 100%; max-height: 300px; margin-top: 13px; border-radius: 12px; border: 1px solid #d5ded6; object-fit: contain; }
+    .photo.visible { display: block; }
+    .linkrow { margin-top: 10px; }
+    .linkrow a { color: #16734c; overflow-wrap: anywhere; }
+    .note { font-size: 14px; margin-top: 21px; color: var(--muted); }
+  </style>
+<script src="pickfoo-api-config.js"></script></head>
+<body>
+<main>
+  <div class="badge">PICKFOO · STEP 183</div>
+  <h1>📷 리뷰 사진 업로드 테스트</h1>
+  <p class="intro">브라우저 콘솔에 코드를 붙여넣지 않고, 사진 업로드 API를 테스트하는 페이지야.</p>
+  <section class="card">
+    <form id="uploadForm">
+      <label for="reviewId">① 내가 작성한 리뷰 ID</label>
+      <input id="reviewId" type="number" min="1" step="1" placeholder="예: 1" required>
+      <p class="hint">음식 조합 ID가 아닌 <strong>리뷰 ID</strong>를 입력해 줘. DBeaver의 catalog_recipereview 테이블에서 확인할 수 있어.</p>
+      <label for="photo">② 테스트용 리뷰 사진 선택</label>
+      <input id="photo" type="file" accept="image/jpeg,image/png,image/webp" required>
+      <p class="hint">JPG, PNG, WebP · 최대 3MB. 개인정보가 없는 테스트용 사진을 사용해 줘.</p>
+      <img id="localPreview" class="photo" alt="선택한 테스트 사진 미리보기">
+      <button id="submitBtn" type="submit">📤 Django 서버에 사진 업로드</button>
+    </form>
+    <div id="status" class="status" role="status" aria-live="polite">먼저 PICKFOO 메인 화면에서 로그인한 뒤 진행해 줘.</div>
+    <div id="linkrow" class="linkrow" hidden><a id="photoLink" target="_blank" rel="noopener noreferrer">저장된 사진 열어보기</a></div>
+    <img id="serverPreview" class="photo" alt="Django 서버에 저장된 리뷰 사진">
+  </section>
+  <p class="note">이 페이지는 <strong>http://127.0.0.1:8765/review-photo-test.html</strong> 주소로 열어야 해. 서버가 제공한 사진 URL은 개발 환경의 공개 미디어 주소이므로 민감한 사진을 업로드하지 마.</p>
+</main>
+<script>
+  'use strict';
+  const form = document.getElementById('uploadForm');
+  const reviewIdField = document.getElementById('reviewId');
+  const photoField = document.getElementById('photo');
+  const submitBtn = document.getElementById('submitBtn');
+  const statusBox = document.getElementById('status');
+  const localPreview = document.getElementById('localPreview');
+  const serverPreview = document.getElementById('serverPreview');
+  const linkrow = document.getElementById('linkrow');
+  const photoLink = document.getElementById('photoLink');
+  const API_BASE = window.PICKFOO_API_BASE;
+  let localObjectURL = null;
+
+  function showStatus(message, type = '') {
+    statusBox.textContent = message;
+    statusBox.className = 'status' + (type ? ' ' + type : '');
+  }
+
+  function getCookie(name) {
+    const item = document.cookie.split('; ').find(part => part.startsWith(name + '='));
+    return item ? decodeURIComponent(item.slice(name.length + 1)) : '';
+  }
+
+  photoField.addEventListener('change', () => {
+    if (localObjectURL) URL.revokeObjectURL(localObjectURL);
+    localPreview.classList.remove('visible');
+    localPreview.removeAttribute('src');
+    const file = photoField.files && photoField.files[0];
+    if (file && file.type.startsWith('image/')) {
+      localObjectURL = URL.createObjectURL(file);
+      localPreview.src = localObjectURL;
+      localPreview.classList.add('visible');
+    }
+  });
+
+  form.addEventListener('submit', async event => {
+    event.preventDefault();
+    serverPreview.classList.remove('visible');
+    serverPreview.removeAttribute('src');
+    linkrow.hidden = true;
+
+    const reviewId = Number(reviewIdField.value);
+    const file = photoField.files && photoField.files[0];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    if (!Number.isSafeInteger(reviewId) || reviewId < 1) {
+      showStatus('올바른 리뷰 ID를 입력해 줘.', 'error');
+      return;
+    }
+    if (!file || !allowedTypes.includes(file.type)) {
+      showStatus('JPG, PNG 또는 WebP 사진을 선택해 줘.', 'error');
+      return;
+    }
+    if (file.size === 0 || file.size > 3 * 1024 * 1024) {
+      showStatus('사진은 0바이트보다 크고 3MB 이하여야 해.', 'error');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    showStatus('CSRF 쿠키를 가져온 다음 사진을 업로드하고 있어…');
+
+    try {
+      const csrfResponse = await fetch(`${API_BASE}/api/accounts/csrf/`, {
+        credentials: 'include'
+      });
+      if (!csrfResponse.ok) throw new Error(`CSRF 쿠키 요청 실패 (HTTP ${csrfResponse.status})`);
+      const csrfToken = getCookie('csrftoken');
+      if (!csrfToken) throw new Error('CSRF 쿠키를 찾을 수 없어. 127.0.0.1 주소로 접속했는지 확인해 줘.');
+
+      const formData = new FormData();
+      formData.append('photo', file);
+
+      const response = await fetch(`${API_BASE}/api/catalog/reviews/${reviewId}/photo/`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'X-CSRFToken': csrfToken },
+        body: formData
+      });
+      const responseText = await response.text();
+      let result;
+      try { result = JSON.parse(responseText); }
+      catch { throw new Error(`서버가 JSON이 아닌 응답을 보냈어 (HTTP ${response.status}).`); }
+
+      if (!response.ok) {
+        const message = result.error || result.detail || '업로드 실패';
+        showStatus(`❌ HTTP ${response.status}: ${message}`, 'error');
+        return;
+      }
+
+      showStatus(`✅ HTTP ${response.status}: ${result.message || '사진 업로드 성공'}\n리뷰 ID: ${result.review_id}`, 'ok');
+      // 로컬 개발 서버의 미디어 주소만 미리보기로 사용
+      if (typeof result.photo_url === 'string' && result.photo_url.startsWith(`${API_BASE}/media/`)) {
+        photoLink.href = result.photo_url;
+        linkrow.hidden = false;
+        serverPreview.src = result.photo_url;
+        serverPreview.classList.add('visible');
+      }
+    } catch (error) {
+      showStatus(`❌ 요청 오류: ${error.message}\nDjango 서버 실행 여부와 로그인 상태를 확인해 줘.`, 'error');
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

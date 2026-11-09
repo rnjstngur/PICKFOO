@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>PICKFOO | 음식 메뉴 DB</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #fff8f3;
+            color: #333;
+        }
+
+        header {
+            background: #ff7448;
+            color: white;
+            padding: 22px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0 0 10px;
+        }
+
+        header a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .notice {
+            background: #fff0df;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(260px, 1fr)
+            );
+            gap: 16px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 3px 10px #0000000a;
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-top: 0;
+        }
+
+        .card.excluded {
+            border: 2px solid #e34a4a;
+            background: #fff5f5;
+        }
+
+        .status {
+            font-weight: bold;
+            margin-top: 14px;
+        }
+
+        .danger {
+            color: #d93030;
+        }
+
+        .warning {
+            color: #9a6500;
+        }
+
+        .details {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        #message {
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+    </style>
+<script src="pickfoo-api-config.js"></script></head>
+
+<body>
+
+    <header>
+        <h1>🍔 PICKFOO 음식 메뉴 DB</h1>
+        <a href="index.html">← PICKFOO 메인으로 돌아가기</a>
+    </header>
+
+    <main>
+
+        <div class="notice">
+            <strong>📌 메뉴 정보 안내</strong>
+            <p>
+                PostgreSQL에 저장된 실제 메뉴 정보를 표시합니다.
+                등록된 재료는 일부 정보일 수 있으므로
+                알레르기 안전 여부를 판단하는 용도로 사용할 수 없습니다.
+            </p>
+        </div>
+
+        <div id="message">메뉴 정보를 불러오는 중...</div>
+
+        <div id="menuGrid" class="grid"></div>
+
+    </main>
+
+    <script>
+        // PICKFOO Django 메뉴 API
+        const API_URL =
+            window.PICKFOO_API_BASE + "/api/catalog/menus/";
+
+        async function loadMenus() {
+
+            const message = document.getElementById("message");
+            const grid = document.getElementById("menuGrid");
+
+            try {
+
+                // 1. 로그인 사용자 기준으로 메뉴 조회
+                const response = await fetch(API_URL, {
+                    method: "GET",
+                    credentials: "include"
+                });
+
+                // 2. 로그인하지 않은 경우
+                if (response.status === 401) {
+                    message.textContent =
+                        "로그인이 필요합니다. PICKFOO에 로그인해 주세요.";
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(
+                        "서버 응답 오류: " + response.status
+                    );
+                }
+
+                // 3. Django JSON 데이터 가져오기
+                const data = await response.json();
+
+                const menus = data.menus || [];
+                const excluded = data.excluded_ingredients || [];
+
+                message.textContent =
+                    "등록된 메뉴: " + menus.length + "개" +
+                    " | 내 제외 재료: " +
+                    (excluded.length ? excluded.join(", ") : "없음");
+
+                // 4. 메뉴 목록 생성
+                grid.replaceChildren();
+
+                menus.forEach(function (menu) {
+
+                    const card = document.createElement("div");
+                    card.className = "card";
+
+                    if (menu.excluded) {
+                        card.classList.add("excluded");
+                    }
+
+                    // 브랜드 및 메뉴 이름
+                    const title = document.createElement("h2");
+                    title.textContent =
+                        menu.brand + " · " + menu.name;
+
+                    // 가격
+                    const price = document.createElement("p");
+                    price.className = "details";
+                    price.textContent =
+                        "💰 가격: " +
+                        (menu.price == null
+                            ? "미확인"
+                            : menu.price.toLocaleString() + "원");
+
+                    // 등록된 재료
+                    const ingredients = document.createElement("p");
+                    ingredients.className = "details";
+
+                    ingredients.textContent =
+                        "🥬 등록된 재료: " +
+                        (
+                            menu.ingredients &&
+                            menu.ingredients.length
+                                ? menu.ingredients.join(", ")
+                                : "정보 없음"
+                        );
+
+                    // 사용자 제외 재료와 비교한 결과
+                    const status = document.createElement("p");
+                    status.className = "status";
+
+                    if (menu.excluded) {
+
+                        status.classList.add("danger");
+
+                        status.textContent =
+                            "⛔ 제외 재료 포함: " +
+                            menu.matched_ingredients.join(", ");
+
+                    } else {
+
+                        status.classList.add("warning");
+
+                        status.textContent =
+                            "⚠️ 등록된 제외 재료 미발견";
+                    }
+
+                    // 재료 검증 상태
+                    const verification = document.createElement("p");
+                    verification.className = "details";
+                    verification.textContent =
+                        "※ 전체 원재료 미검증";
+
+                    // 카드 구성
+                    card.appendChild(title);
+                    card.appendChild(price);
+                    card.appendChild(ingredients);
+                    card.appendChild(status);
+                    card.appendChild(verification);
+
+                    grid.appendChild(card);
+
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                message.textContent =
+                    "메뉴 정보를 불러오지 못했습니다. " +
+                    "Django 서버 실행 상태를 확인해 주세요.";
+            }
+        }
+
+        // 페이지가 열리면 자동으로 DB 조회
+        loadMenus();
+
+    </script>
+
+</body>
+</html>

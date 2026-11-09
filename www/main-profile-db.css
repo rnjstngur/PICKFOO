@@ -1,0 +1,163 @@
+/* PICKFOO 메인 화면 > 마이페이지 음식 취향 카드 (DB 연동용) */
+#myPageView .pf-taste-panel {
+  background: #fff;
+  border: 1px solid #eee4da;
+  border-radius: 22px;
+  padding: 22px 20px 20px;
+  margin-top: 18px;
+  box-shadow: 0 8px 22px rgba(63, 43, 26, .035);
+  color: #27231f;
+  min-width: 0;
+}
+#myPageView .pf-taste-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 19px;
+  border-bottom: 1px solid #f1ece6;
+}
+#myPageView .pf-taste-eyebrow {
+  color: #ea5a3d;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  font-size: 10px;
+  margin-bottom: 7px;
+}
+#myPageView .pf-taste-title {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -.6px;
+  margin: 0 0 7px;
+}
+#myPageView .pf-taste-subtitle {
+  color: #94877a;
+  font-size: 11px;
+  line-height: 1.6;
+  margin: 0;
+}
+#myPageView .pf-taste-status {
+  white-space: nowrap;
+  color: #2b835a;
+  background: #eaf7ef;
+  border-radius: 30px;
+  padding: 7px 9px;
+  font-size: 10px;
+  font-weight: 800;
+}
+#myPageView .pf-taste-groups { padding: 6px 0; }
+#myPageView .pf-taste-group { padding: 14px 0 12px; min-width: 0; }
+#myPageView .pf-taste-heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+#myPageView .pf-taste-icon { font-size: 16px; line-height: 1.2; }
+#myPageView .pf-taste-heading h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: #3b322c;
+}
+#myPageView .pf-taste-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+#myPageView .pf-taste-tag {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 29px;
+  padding: 6px 12px;
+  border-radius: 9px;
+  border: 1px solid #f7dcd2;
+  background: #fff3ee;
+  color: #c64c30;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+#myPageView .pf-taste-empty {
+  display: block;
+  font-size: 12px;
+  color: #998f85;
+  line-height: 1.7;
+}
+#myPageView .pf-taste-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+  margin-top: 8px;
+}
+#myPageView .pf-taste-stat {
+  padding: 15px;
+  border-radius: 14px;
+  background: #f8f6f2;
+  min-width: 0;
+}
+#myPageView .pf-taste-stat.accent { background: #fff2ed; }
+#myPageView .pf-taste-stat-label {
+  display: block;
+  font-size: 11px;
+  color: #897c71;
+  margin-bottom: 9px;
+}
+#myPageView .pf-taste-stat-value {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: #302821;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+#myPageView .pf-taste-extras {
+  margin-top: 18px;
+  border-top: 1px dashed #ebe3dc;
+}
+#myPageView .pf-taste-group-excluded .pf-taste-tag,
+#myPageView .pf-taste-group-allergy .pf-taste-tag {
+  background: #f5f4f2;
+  border-color: #e9e6e1;
+  color: #665e56;
+}
+#myPageView .pf-taste-footer {
+  padding-top: 17px;
+  margin-top: 5px;
+  border-top: 1px solid #f1ece6;
+}
+#myPageView .pf-taste-action,
+#myPageView .pf-taste-retry {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  text-decoration: none;
+  background: #f04e32;
+  color: #fff;
+  border: 0;
+  border-radius: 12px;
+  padding: 14px 12px;
+  min-height: 44px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+#myPageView .pf-taste-action:hover,
+#myPageView .pf-taste-retry:hover { background: #dc422a; }
+#myPageView .pf-taste-action:focus-visible,
+#myPageView .pf-taste-retry:focus-visible {
+  outline: 3px solid #ffb7a8;
+  outline-offset: 2px;
+}
+#myPageView .pf-taste-empty-state { padding: 10px 0; }
+#myPageView .pf-taste-empty-state strong { display: block; font-size: 15px; }
+#myPageView .pf-taste-empty-state p { color: #887d74; font-size: 12px; line-height: 1.7; }
+#myPageView .pf-taste-retry { margin-top: 12px; }
+/* 하단 고정 메뉴에 마지막 카드가 가리지 않도록 간격 확보 */
+#myPageView { padding-bottom: 50px; }
+@media (max-width: 380px) {
+  #myPageView .pf-taste-panel { padding: 17px 14px; }
+  #myPageView .pf-taste-summary { grid-template-columns: 1fr; }
+  #myPageView .pf-taste-header { flex-wrap: wrap; }
+}

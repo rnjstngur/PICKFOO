@@ -1,0 +1,18 @@
+PICKFOO 팀원 설치 안내
+
+현재 버전은 Django/PostgreSQL을 쓰는 웹 개발 버전입니다.
+이전 로컬 저장소(서버 없는) 안내 문서는 최신 버전과 다르므로 본 파일 및 팀원 PDF를 참고하세요.
+
+Windows에서:
+- backend/.env.example -> backend/.env 복사 + 내 DB 정보와 DJANGO_SECRET_KEY 설정
+- PostgreSQL pickfoo_db 생성
+- CMD: cd /d <압축 푼 폴더>\backend
+- py -3 -m venv .venv
+- .venv\Scripts\python.exe -m pip install -r requirements.txt
+- .venv\Scripts\python.exe manage.py migrate
+- .venv\Scripts\python.exe manage.py runserver
+- 새 CMD: cd /d <압축 푼 폴더>\www
+- ..\backend\.venv\Scripts\python.exe -m http.server 8765 --bind 127.0.0.1
+- http://127.0.0.1:8765/index.html 접속
+
+자세한 내용: PICKFOO_팀원_설치_실행_가이드.pdf

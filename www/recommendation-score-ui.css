@@ -1,0 +1,52 @@
+.taste-score {
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+.taste-score-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #71594b;
+}
+
+.taste-score-label span {
+    color: #f24d35;
+    font-weight: bold;
+}
+
+.taste-score-track {
+    width: 100%;
+    height: 10px;
+    background: #f3e7dc;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.taste-score-fill {
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        #ffac59,
+        #f24d35
+    );
+    border-radius: 20px;
+}
+
+/* DB 제외 재료 경고 */
+
+.catalog-exclusion-warning {
+    margin-top: 12px;
+    padding: 10px 12px;
+
+    background: #fff0ed;
+    border: 1px solid #ffb5a6;
+    border-radius: 10px;
+
+    color: #c43d2f;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.6;
+}

@@ -1,0 +1,61 @@
+/* PICKFOO STEP 204 — 앱 시작 로딩 화면 (기존 기능과 독립) */
+:root { --pf-splash-bg: #fff8f1; --pf-splash-orange: #f04e32; --pf-splash-ink: #2b2521; }
+.pf-splash {
+  position: fixed; inset: 0; z-index: 2147483600;
+  display: flex; align-items: center; justify-content: center; flex-direction: column;
+  overflow: hidden; background: var(--pf-splash-bg); color: var(--pf-splash-ink);
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  opacity: 1; visibility: visible;
+  transition: opacity .46s ease, visibility .46s ease;
+  isolation: isolate;
+}
+.pf-splash::before, .pf-splash::after {
+  content: ''; position: absolute; border-radius: 50%; pointer-events: none;
+}
+.pf-splash::before {
+  width: 56vmax; height: 56vmax; top: -39vmax; right: -28vmax;
+  background: rgba(255, 217, 190, .38);
+}
+.pf-splash::after {
+  width: 49vmax; height: 49vmax; bottom: -40vmax; left: -27vmax;
+  background: rgba(255, 231, 215, .65);
+}
+.pf-splash__center {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  transform: translateY(-27px);
+  animation: pf-rise .7s cubic-bezier(.2,.8,.2,1) both;
+}
+.pf-splash__icon {
+  width: 164px; height: 164px;
+  display: block; filter: drop-shadow(0 15px 18px rgba(228, 97, 58, .12));
+  animation: pf-bob 2s ease-in-out infinite;
+}
+.pf-splash__brand {
+  margin-top: 20px; font-size: clamp(45px, 10vw, 58px);
+  font-weight: 900; letter-spacing: -2.8px; line-height: 1.1;
+}
+.pf-splash__brand span { color: var(--pf-splash-orange); }
+.pf-splash__korean { margin-top: 6px; font-size: 16px; font-weight: 800; color: #a75a42; letter-spacing: 3px; }
+.pf-splash__slogan { margin: 15px 0 0; font-size: 14px; font-weight: 600; letter-spacing: -.3px; color: #796c61; }
+.pf-splash__footer {
+  position: absolute; z-index: 1; bottom: max(48px, calc(env(safe-area-inset-bottom) + 36px));
+  left: 12px; right: 12px; display: flex; align-items: center;
+  flex-direction: column; gap: 12px; text-align: center;
+  color: #95796b; font-size: 12px; font-weight: 500;
+}
+.pf-splash__dots { display: flex; gap: 8px; align-items: center; height: 11px; }
+.pf-splash__dots span {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--pf-splash-orange);
+  animation: pf-dot 1s ease-in-out infinite;
+}
+.pf-splash__dots span:nth-child(2) { animation-delay: .18s; }
+.pf-splash__dots span:nth-child(3) { animation-delay: .36s; }
+.pf-splash.pf-splash--exit { opacity: 0; visibility: hidden; pointer-events: none; }
+@keyframes pf-bob { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
+@keyframes pf-rise { from { transform: translateY(-12px); opacity: 0; } to { transform: translateY(-27px); opacity: 1; } }
+@keyframes pf-dot { 0%, 65%, 100% { transform: translateY(0); opacity: .28; } 30% { transform: translateY(-5px); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .pf-splash__icon, .pf-splash__center, .pf-splash__dots span { animation: none !important; }
+  .pf-splash { transition-duration: .15s; }
+}

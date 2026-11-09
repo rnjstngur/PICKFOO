@@ -1,0 +1,461 @@
+[
+ {
+  "id": "cheese-sausage-rabokki",
+  "name": "치즈소시지 국물라볶이",
+  "brand": "복수 브랜드",
+  "category": "분식",
+  "ingredients": [
+   "왕뚜껑 국물라볶이",
+   "피자치즈",
+   "비엔나소시지",
+   "반숙란",
+   "참기름",
+   "깨"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "dumpling-fishcake-rabokki",
+  "name": "만두어묵 국물라볶이",
+  "brand": "복수 브랜드",
+  "category": "분식",
+  "ingredients": [
+   "왕뚜껑 국물라볶이",
+   "냉동만두",
+   "어묵",
+   "대파",
+   "깨"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "riceball-cheese-rabokki",
+  "name": "삼각김밥 치즈라볶이",
+  "brand": "복수 브랜드",
+  "category": "분식",
+  "ingredients": [
+   "왕뚜껑 국물라볶이",
+   "삼각김밥",
+   "피자치즈",
+   "김가루",
+   "참기름"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "buldak-seaweed-soup",
+  "name": "불닭미역탕면",
+  "brand": "복수 브랜드",
+  "category": "면",
+  "ingredients": [
+   "불닭볶음탕면",
+   "비비고 소고기미역국",
+   "햇반",
+   "모짜렐라치즈"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "cold-buldak",
+  "name": "불닭냉면",
+  "brand": "복수 브랜드",
+  "category": "면",
+  "ingredients": [
+   "불닭볶음면",
+   "동치미 냉면육수",
+   "오이",
+   "삶은 달걀",
+   "얼음"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "soy-buldak",
+  "name": "불닭콩국수",
+  "brand": "복수 브랜드",
+  "category": "면",
+  "ingredients": [
+   "불닭볶음면",
+   "콩국물",
+   "오이",
+   "깨",
+   "얼음"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "soy-chicken-soup",
+  "name": "콩국삼계탕",
+  "brand": "복수 브랜드",
+  "category": "한식",
+  "ingredients": [
+   "닭",
+   "진한 콩국물",
+   "한약재",
+   "월계수잎",
+   "마늘",
+   "통후추",
+   "양파"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "soy-hotteok",
+  "name": "콩국물호떡",
+  "brand": "복수 브랜드",
+  "category": "디저트",
+  "ingredients": [
+   "진한 콩국물",
+   "호떡믹스",
+   "견과류"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "soy-bark",
+  "name": "콩국물 바크",
+  "brand": "복수 브랜드",
+  "category": "디저트",
+  "ingredients": [
+   "콩국물",
+   "과일",
+   "시리얼"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "chips-icecream",
+  "name": "감자칩 아이스크림",
+  "brand": "복수 브랜드",
+  "category": "디저트",
+  "ingredients": [
+   "포카칩 오리지널",
+   "투게더 아이스크림"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "coconut-yogurt",
+  "name": "빠다코코넛 요거트케이크",
+  "brand": "복수 브랜드",
+  "category": "디저트",
+  "ingredients": [
+   "빠다코코넛",
+   "요거트"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "strawberry-watermelon",
+  "name": "딸기수박라떼",
+  "brand": "복수 브랜드",
+  "category": "음료",
+  "ingredients": [
+   "딸기우유",
+   "수박에이드",
+   "얼음컵"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "pocari-vita",
+  "name": "포카리 비타에이드",
+  "brand": "복수 브랜드",
+  "category": "음료",
+  "ingredients": [
+   "포카리스웨트",
+   "비타500",
+   "얼음컵"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "mango-milkis",
+  "name": "망고 밀키스",
+  "brand": "복수 브랜드",
+  "category": "음료",
+  "ingredients": [
+   "밀키스",
+   "애플망고에이드",
+   "얼음컵"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "barley-soda",
+  "name": "보리사이다",
+  "brand": "복수 브랜드",
+  "category": "음료",
+  "ingredients": [
+   "사이다",
+   "보리차",
+   "얼음컵"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "grape-ceylon",
+  "name": "청포도 실론티",
+  "brand": "복수 브랜드",
+  "category": "음료",
+  "ingredients": [
+   "청포도에이드",
+   "실론티",
+   "얼음컵"
+  ],
+  "sourceTitle": "우먼센스 모디슈머 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20260812080107926",
+  "sourceDate": "2026-08-12",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "kalchibap",
+  "name": "칼치밥",
+  "brand": "GS25",
+  "category": "면",
+  "ingredients": [
+   "멸치칼국수 사발면",
+   "참치마요 삼각김밥"
+  ],
+  "sourceTitle": "서울경제 편의점 직원 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20251010150212465",
+  "sourceDate": "2025-10-10",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "cheese-jjambbong-tofu",
+  "name": "해장치즈불짬순",
+  "brand": "이마트24",
+  "category": "면",
+  "ingredients": [
+   "진짬뽕",
+   "한끼연두부",
+   "스트링치즈"
+  ],
+  "sourceTitle": "서울경제 편의점 직원 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20251010150212465",
+  "sourceDate": "2025-10-10",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "gorgon-spaghetti",
+  "name": "고르곤스파게티",
+  "brand": "CU",
+  "category": "양식",
+  "ingredients": [
+   "피자득템 고르곤졸라",
+   "콕콕콕 스파게티"
+  ],
+  "sourceTitle": "서울경제 편의점 직원 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20251010150212465",
+  "sourceDate": "2025-10-10",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "green-onion-marshmallow",
+  "name": "파시멜로 누가샌드",
+  "brand": "세븐일레븐",
+  "category": "디저트",
+  "ingredients": [
+   "대파크래커",
+   "마시멜로"
+  ],
+  "sourceTitle": "서울경제 편의점 직원 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20251010150212465",
+  "sourceDate": "2025-10-10",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "strawberry-nougat",
+  "name": "말랑카우딸기 누가크래커",
+  "brand": "이마트24",
+  "category": "디저트",
+  "ingredients": [
+   "참크래커",
+   "말랑카우 딸기맛"
+  ],
+  "sourceTitle": "서울경제 편의점 직원 조합 소개",
+  "sourceUrl": "https://v.daum.net/v/20251010150212465",
+  "sourceDate": "2025-10-10",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "bulguri",
+  "name": "불그리",
+  "brand": "복수 브랜드",
+  "category": "면",
+  "ingredients": [
+   "불닭볶음면",
+   "너구리"
+  ],
+  "sourceTitle": "더팩트 불그리 메론소다 등 소개",
+  "sourceUrl": "https://news.tf.co.kr/read/livingculture/2020696.htm",
+  "sourceDate": "2023-05-29",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "paik-melon-soda",
+  "name": "빽다방 메론소다 커스텀",
+  "brand": "빽다방",
+  "category": "음료",
+  "ingredients": [
+   "아이스 크러시 멜론",
+   "탄산수",
+   "각얼음",
+   "아이스크림"
+  ],
+  "sourceTitle": "더팩트 불그리 메론소다 등 소개",
+  "sourceUrl": "https://news.tf.co.kr/read/livingculture/2020696.htm",
+  "sourceDate": "2023-05-29",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "ashotchu",
+  "name": "아샷추",
+  "brand": "복수 브랜드",
+  "category": "음료",
+  "ingredients": [
+   "아이스티",
+   "에스프레소 샷"
+  ],
+  "sourceTitle": "더팩트 불그리 메론소다 등 소개",
+  "sourceUrl": "https://news.tf.co.kr/read/livingculture/2020696.htm",
+  "sourceDate": "2023-05-29",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "starbucks-pigbar",
+  "name": "돼지바 프라푸치노",
+  "brand": "스타벅스",
+  "category": "음료",
+  "ingredients": [
+   "딸기크림 프라푸치노 벤티",
+   "우유 변경",
+   "딸기시럽",
+   "자바칩",
+   "토핑"
+  ],
+  "sourceTitle": "뉴시스 스타벅스 커스텀 레시피 소개",
+  "sourceUrl": "https://www.newsis.com/view/NISX20200626_0001074512",
+  "sourceDate": "2020-06-28",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "starbucks-shrek",
+  "name": "슈렉 프라푸치노",
+  "brand": "스타벅스",
+  "category": "음료",
+  "ingredients": [
+   "그린티 프라푸치노 벤티",
+   "에스프레소 샷",
+   "자바칩",
+   "휘핑",
+   "드리즐"
+  ],
+  "sourceTitle": "뉴시스 스타벅스 커스텀 레시피 소개",
+  "sourceUrl": "https://www.newsis.com/view/NISX20200626_0001074512",
+  "sourceDate": "2020-06-28",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "starbucks-godiva",
+  "name": "고디바 프라푸치노",
+  "brand": "스타벅스",
+  "category": "음료",
+  "ingredients": [
+   "자바칩 프라푸치노 벤티",
+   "모카시럽",
+   "헤이즐넛시럽",
+   "프라푸치노 로스트",
+   "자바칩",
+   "초콜릿 드리즐"
+  ],
+  "sourceTitle": "뉴시스 스타벅스 커스텀 레시피 소개",
+  "sourceUrl": "https://www.newsis.com/view/NISX20200626_0001074512",
+  "sourceDate": "2020-06-28",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "subway-suho",
+  "name": "수호세트",
+  "brand": "서브웨이",
+  "category": "샌드위치",
+  "ingredients": [
+   "스테이크앤치즈 15cm",
+   "허니오트",
+   "아메리칸치즈",
+   "더블미트",
+   "아보카도",
+   "스위트어니언",
+   "마요네즈",
+   "야채 9종",
+   "제로콜라"
+  ],
+  "sourceTitle": "파이낸셜뉴스 셀럽 커스텀 레시피 소개",
+  "sourceUrl": "https://www.fnnews.com/news/201809211531213616",
+  "sourceDate": "2018-09-24",
+  "note": "가격·판매 여부 확인 전 후보"
+ },
+ {
+  "id": "subway-hwasa",
+  "name": "화사 로티세리 치킨 조합",
+  "brand": "서브웨이",
+  "category": "샌드위치",
+  "ingredients": [
+   "로티세리치킨",
+   "파마산오레가노",
+   "아메리칸치즈",
+   "베이컨",
+   "리치시저소스"
+  ],
+  "sourceTitle": "파이낸셜뉴스 셀럽 커스텀 레시피 소개",
+  "sourceUrl": "https://www.fnnews.com/news/201809211531213616",
+  "sourceDate": "2018-09-24",
+  "note": "가격·판매 여부 확인 전 후보"
+ }
+]

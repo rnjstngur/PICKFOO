@@ -636,7 +636,7 @@ async function loadDbRatingHistory(force = false) {
       const rating = Number(row?.rating);
       if (!recipe || used.has(key) || !Number.isInteger(rating) || rating < 1 || rating > 5) continue;
       used.add(key);
-      loaded.push({id: recipe.id, brand: recipe.brand, category: recipe.category, rating});
+      loaded.push({id: recipe.id, brand: recipe.brand, category: recipe.category, name: recipe.name, ingredients: recipe.ingredients, spicy: recipe.spicy, rating});
     }
     if (version !== ratingHistoryRequestVersion) return;
     dbRatingHistory = loaded;
@@ -656,6 +656,13 @@ function activePreferences() {
   if (!dbRecommendationPreferences) return null;
   return {...dbRecommendationPreferences, history: dbRatingHistory};
 }
+// 주문 계획·출처 표시 모듈(order-plan.js, trend-source.js)이 읽기 전용으로 사용합니다.
+window.PICKFOO_APP = {
+  recipe: id => data.recipes.find(x => x.id === id) || null,
+  recipes: () => data.recipes.slice(),
+  selected: () => state.selected,
+  prefs: () => activePreferences()
+};
 function reasonFor(r){
   if($('#sortMode').value!=='personalized')return '';
   const p=activePreferences();

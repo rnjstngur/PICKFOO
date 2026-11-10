@@ -95,6 +95,29 @@
     return { total, external: e.value, inApp: i, age: e.age, kind: e.kind, label };
   }
 
+  // 자동 수집 신호(네이버 블로그·유튜브)를 항목에 덧씌운다. 채택 기준을 통과할 때만 SNS 항목으로 바꾸고,
+  // 통과하지 못하면 원래 출처(기사 등)를 유지한 채 수집 결과만 메모로 남긴다.
+  const SIGNAL_SOURCES = { naver_blog: { platform: 'blog', label: '네이버 블로그' }, youtube: { platform: 'youtube', label: '유튜브' } };
+  function applySignal(item, signal, collectedAt) {
+    if (!signal) return item;
+    let best = null;
+    Object.keys(SIGNAL_SOURCES).forEach(src => {
+      const s = signal[src];
+      if (!s) return;
+      if (!best || s.authors30 > best.s.authors30 || (s.authors30 === best.s.authors30 && s.latest > best.s.latest)) best = { src, s };
+    });
+    if (!best) return item;
+    const meta = SIGNAL_SOURCES[best.src];
+    const sample = (best.s.samples || [])[0] || {};
+    const overlay = Object.assign({}, item, {
+      platform: meta.platform, sourceDate: best.s.latest, accounts: best.s.authors30, reactions: 0,
+      sourceUrl: sample.url || '', sourceTitle: `${meta.label} 최근 30일 ${best.s.authors30}명 · 120일 ${best.s.authors120}명`,
+      observedAt: String(collectedAt || '').slice(0, 10), autoCollected: true
+    });
+    if (snsCheck(overlay).ok) return overlay;
+    return Object.assign({}, item, { signalNote: `${meta.label} 최근 30일 ${best.s.authors30}명(기준 ${MIN_ACCOUNTS}명 미만)` });
+  }
+
   // SNS 후보 중 채택 기준을 못 맞춘 것은 순위에서 뺀다.
   function rankTrends(items, now = new Date()) {
     return items.filter(it => !isSns(it) || snsCheck(it).ok).map((it, index) => ({ it, index, s: trendScore(it, now) }))
@@ -103,7 +126,7 @@
   }
 
   return { HALF_LIFE_DAYS, RECENT_DAYS, W_EXTERNAL, W_INAPP, CURATED_SOURCES, SNS_PLATFORMS,
-           MIN_ACCOUNTS, MIN_REACTIONS, daysBetween, externalScore, inAppScore, isSns, snsCheck, trendScore, rankTrends };
+           MIN_ACCOUNTS, MIN_REACTIONS, applySignal, daysBetween, externalScore, inAppScore, isSns, snsCheck, trendScore, rankTrends };
 });
 
 /* ---------- 화면: 홈 '트렌드 조합' 패널 ---------- */
@@ -147,7 +170,8 @@
 </div>
 <div class="pt-list" aria-live="polite"></div>
 <p class="pt-policy">점수 = 0.6 × 외부 최신성(반감기 ${T.HALF_LIFE_DAYS}일, 소개 후 ${T.RECENT_DAYS}일 지나면 스테디로 이동) + 0.4 × 앱 반응(최근 7일 서로 다른 평가자 수·평균 별점).<br>SNS 조합 채택 기준: ① 공개 게시물 주소·게시일 확인 ② 서로 다른 계정 ${T.MIN_ACCOUNTS}곳 이상이 올렸거나 한 게시물 반응 ${T.MIN_REACTIONS.toLocaleString()} 이상 ③ 재료·옵션 2개 이상 확인 ④ 주류 제외. 하나라도 못 맞추면 목록에서 빼요. 팀이 주 1회 SNS·기사를 직접 찾아 넣고(자동 수집 아님), 채택과 순위는 이 규칙으로 계산해요.</p>
-<p class="pt-policy pt-excluded"></p>`;
+<p class="pt-policy pt-excluded"></p>
+<p class="pt-policy pt-collect"></p>`;
   const anchor = document.getElementById('pickfooTrending7d') || results;
   anchor.before(sec);
 
@@ -155,6 +179,7 @@
   let mode = 'recent';
   let candidates = [];
   let reviews = {};
+  let signals = null;
 
   function fmtAge(age) { return age == null ? '소개일 미확인' : (age === 0 ? '오늘 소개' : `${age}일 전 소개`); }
 
@@ -165,14 +190,16 @@
       const src = T.CURATED_SOURCES[r.id] || {};
       const rv = reviews[r.id] || {};
       return { key: r.id, name: r.name, brand: r.brand, inApp: true, sourceDate: src.date || null,
-               sourceTitle: src.title || '', sourceUrl: src.url || '', reviewers7d: rv.n || 0, avg7d: rv.avg || 0 };
+               sourceTitle: src.title || '', sourceUrl: src.url || '', reviewers7d: rv.n || 0, avg7d: rv.avg || 0,
+               ingredients: r.ingredients || [] };
     });
     const fromSources = candidates.map(c => ({ key: c.id, name: c.name, brand: c.brand, inApp: false,
       sourceDate: c.sourceDate, sourceTitle: c.sourceTitle, sourceUrl: c.sourceUrl, reviewers7d: 0, avg7d: 0,
       platform: c.platform || 'article', ingredients: c.ingredients || [], accounts: c.accounts || 0,
       reactions: c.reactions || 0, observedAt: c.observedAt || null, sponsored: !!c.sponsored,
       availability: c.availability || 'unverified' }));
-    return fromApp.concat(fromSources);
+    const sig = (signals && signals.items) || {};
+    return fromApp.concat(fromSources).map(it => T.applySignal(it, sig[it.key], signals && signals.collectedAt));
   }
 
   function render() {
@@ -181,6 +208,15 @@
     const excluded = all.filter(x => T.isSns(x) && !T.snsCheck(x).ok).length;
     const exEl = sec.querySelector('.pt-excluded');
     exEl.textContent = excluded ? `SNS 후보 중 채택 기준을 못 맞춘 ${excluded}개는 제외했어요.` : '';
+    const col = sec.querySelector('.pt-collect');
+    if (signals && signals.collectedAt) {
+      const names = (signals.sources || []).map(s => s === 'naver_blog' ? '네이버 블로그' : s === 'youtube' ? '유튜브' : s).join('·');
+      col.textContent = `자동 수집: ${names} 공식 검색 API, 마지막 수집 ${signals.collectedAt.slice(0, 16).replace('T', ' ')} (24시간마다 갱신)`;
+    } else if (signals && signals.configured && !signals.configured.naver && !signals.configured.youtube) {
+      col.textContent = '자동 수집: 검색 API 키가 설정되지 않아 아직 수집하지 않았어요.';
+    } else if (signals && signals.refreshing) {
+      col.textContent = '자동 수집: 지금 수집 중이에요. 잠시 후 새로고침하세요.';
+    } else col.textContent = '';
     const shown = ranked.filter(x => mode === 'recent'
       ? (x.trend.kind === 'recent' || x.trend.inApp > 0)
       : mode === 'sns' ? T.isSns(x)
@@ -209,9 +245,11 @@
         meta.appendChild(pc);
       }
       meta.append(` ${x.brand} · ${fmtAge(x.trend.age)} · 외부 ${x.trend.external.toFixed(1)} / 앱 반응 ${x.trend.inApp.toFixed(1)} `);
+      if (x.signalNote) meta.append(x.signalNote + ' ');
+      if (x.autoCollected) { const ac = document.createElement('span'); ac.className = 'pt-chip'; ac.textContent = '자동 수집'; meta.appendChild(ac); }
       if (T.isSns(x)) {
         const spread = [];
-        if (x.accounts) spread.push(`${x.accounts}개 계정`);
+        if (x.accounts && !x.autoCollected) spread.push(`${x.accounts}개 계정`);
         if (x.reactions) spread.push(`반응 ${Number(x.reactions).toLocaleString()}${x.observedAt ? ` (${x.observedAt} 확인)` : ''}`);
         if (spread.length) meta.append(spread.join(' · ') + ' ');
         if (x.sponsored) { const ad = document.createElement('span'); ad.className = 'pt-chip'; ad.textContent = '광고·협찬 표기'; meta.appendChild(ad); }
@@ -255,6 +293,11 @@
         (data.items || []).forEach(it => { reviews[it.key] = { n: it.review_count, avg: it.average_rating }; });
       }
     } catch (_) { reviews = {}; }
+    try {
+      const base = String(window.PICKFOO_API_BASE || window.location.origin).replace(/\/$/, '');
+      const r = await fetch(base + '/api/catalog/trend-signals/', { cache: 'no-store' });
+      if (r.ok) signals = await r.json();
+    } catch (_) { signals = null; }
     render();
   }
   render();

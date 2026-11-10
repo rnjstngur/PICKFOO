@@ -99,3 +99,9 @@ from .product_link_views import links_for_ingredients
 urlpatterns += [
     path('product-links/', links_for_ingredients, name='pickfoo-product-links'),
 ]
+
+# PICKFOO_TREND_SIGNALS: 공식 API(네이버 블로그·유튜브) 자동 수집 결과
+from .trend_views import trend_signals
+urlpatterns += [
+    path('trend-signals/', trend_signals, name='pickfoo-trend-signals'),
+]

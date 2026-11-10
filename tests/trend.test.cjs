@@ -38,3 +38,14 @@ test('기준 미달 SNS 후보는 순위에서 빠지고, 단일 게시물 반�
  assert.equal((r[1].trend.external/r[0].trend.external).toFixed(2),'0.80');
  assert.equal(r[0].trend.label,'📸 SNS 화제');
 });
+test('자동 수집 신호는 최근 30일 작성자 3명 이상일 때만 SNS 항목이 되고, 미달이면 원래 출처를 유지한다',()=>{
+ const item={key:'k',name:'불닭 콘치즈',ingredients:['불닭볶음면','콘'],sourceDate:'2020-01-01'};
+ const good={naver_blog:{authors30:4,authors120:9,latest:'2026-11-08',samples:[{url:'https://blog.naver.com/a/1'}]},youtube:{authors30:1,authors120:2,latest:'2026-11-09',samples:[]}};
+ const g=T.applySignal(item,good,'2026-11-10T09:00:00+09:00');
+ assert.equal(g.platform,'blog');assert.equal(g.accounts,4);assert.equal(g.sourceDate,'2026-11-08');assert.equal(g.autoCollected,true);
+ assert.equal(T.trendScore(g,now).label,'📸 SNS 화제');
+ const weak={naver_blog:{authors30:2,authors120:5,latest:'2026-11-08',samples:[{url:'https://blog.naver.com/a/1'}]}};
+ const w=T.applySignal(item,weak,'2026-11-10');
+ assert.equal(w.platform,undefined);assert.equal(w.sourceDate,'2020-01-01');assert.match(w.signalNote,/2명/);
+ assert.equal(T.applySignal(item,null),item);
+});

@@ -3,7 +3,7 @@
 다른 AI(Codex, Claude)와 팀원이 번갈아 작업한다. **작업을 마칠 때마다 이 파일을 갱신한다.**
 비밀번호, 비밀키, `.env` 값, DB 접속 주소, 토큰은 이 파일에 적지 않는다.
 
-- 마지막 갱신: 2026-11-10 11:00 KST, Claude
+- 마지막 갱신: 2026-11-10 11:10 KST, Claude
 - 발표: 2026-11-11
 
 ---
@@ -58,6 +58,12 @@
 - catalog, accounts 앱에서는 테스트가 발견되지 않았다(6개 모두 points).
 - PostgreSQL/MySQL 회귀 테스트는 하지 않았다.
 
+### 3-4-1. 트렌드 수집기 테스트 (사용자 Windows PC, `DB_ENGINE=sqlite`, API 키 없이 가짜 응답)
+- 명령: `manage.py test catalog.test_trend_collector points -v 2`
+- 결과: **수집기 테스트 6개 모두 통과**(관련성 판정, 작성자 수 집계, 저장·API 응답, 키 없을 때 미수집, 한 출처 실패 시 계속, 24시간 갱신 판정). points는 5개 통과 + 기존 Windows 임시 파일 오류 1개(3-4와 동일)
+- 프런트: `node --test tests/*.test.cjs` **16개 통과**. 가짜 API 응답으로 390px 화면 확인(자동 수집 배지, 수집 시각, 기준 미달 메모, 오류 0건)
+- **실제 네이버·유튜브 API 호출은 아직 한 번도 하지 않았다**(키 미설정)
+
 ### 3-5. Android 에뮬레이터 (2026-11-09, 서버 없이 www를 넣은 시연용 빌드)
 - PICKFOO 버튼 → `baemin://search` → 배민 검색 화면(`SearchHomeActivity`) 열림: 확인
 - `baemin://search?keyword=...`, `?query=...`: 앱은 열리지만 검색어 자동 입력 안 됨
@@ -89,9 +95,20 @@
 - JSON 필드: `platform`(instagram/youtube/tiktok/blog), `sourceUrl`, `sourceDate`, `accounts`, `reactions`, `observedAt`, `sponsored`, `availability`(confirmed/unverified), `ingredients`
 - **아직 SNS 데이터 0건** → "SNS 화제" 탭은 빈 상태 문구가 나온다
 
+### 4-2. 트렌드 자동 수집기 (2026-11-10 추가, 구현 완료 / 운영 키 설정·실제 수집은 아직)
+- 파일: `backend/catalog/trend_collector.py`, `backend/catalog/trend_views.py`, `backend/catalog/urls.py`(경로 1개 추가), `backend/catalog/management/commands/collect_trends.py`, `backend/catalog/test_trend_collector.py`, `www/trend.js`, `tests/trend.test.cjs`
+- 출처: **공식 API만** 사용. 네이버 검색 API(블로그), YouTube Data API v3. 인스타그램·틱톡은 약관상 스크래핑 금지라 수집하지 않음
+- 대상: 전시 조합 20개(`CURATED_QUERIES` 검색어) + `www/trend-candidates.json` 후보
+- 판정: 제목·요약에 검색어 핵심 단어가 모두 있는 게시물만 셈(띄어쓰기 무시). 조합별 최근 30일·120일 서로 다른 작성자 수, 최신 게시일, 예시 3개
+- 저장: DB가 아니라 기본 파일 저장소의 `trend/signals.json`(운영은 pickfoo-photos 버킷). 제목·주소·날짜·작성자 식별값만 저장, 본문 저장 안 함
+- 주기: `GET /api/catalog/trend-signals/`가 결과가 24시간 넘게 지났으면 백그라운드로 한 번 다시 수집(프로세스별 잠금). 수동: `python manage.py collect_trends`
+- 화면: 최근 30일 작성자 3명 이상이면 SNS 기준 통과 → "SNS 화제"에 "자동 수집" 배지로 표시. 미달이면 원래 출처 유지 + "네이버 블로그 최근 30일 n명(기준 3명 미만)" 메모. 패널에 마지막 수집 시각 표시
+- 필요한 환경변수(값은 여기 적지 않음): `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, 선택 `YOUTUBE_API_KEY`. 없으면 수집하지 않고 패널에 "API 키가 설정되지 않아" 표시
+- 한계: 블로그 반응 수(공감)는 API에서 오지 않아 작성자 수로만 판단. 검색어가 일반적이면 다른 글이 섞일 수 있음. gunicorn 워커 2개라 동시에 두 번 수집될 수 있음(결과는 덮어씀)
+
 ## 5. DB 변경, 마이그레이션
 
-- **DB 스키마 변경 없음, 새 마이그레이션 없음.** 포인트 제한은 기존 `PointEntry` 조회만 한다.
+- **DB 스키마 변경 없음, 새 마이그레이션 없음.** (트렌드 수집 결과도 DB가 아니라 파일 저장소에 저장) 포인트 제한은 기존 `PointEntry` 조회만 한다.
 - 운영 DB에 데이터를 쓰거나 지우지 않았다.
 
 ## 6. 실행 방법
@@ -112,7 +129,9 @@
 
 ### 계획만 있음 (구현 안 됨)
 - [ ] Railway GitHub 자동 배포: 저장소 주인이 Railway GitHub 앱 권한 허용
-- [ ] SNS 조합 5~10개 수집(양식 `data/sns_trend_template.csv`) → `trend-candidates.json`에 추가 → 배포
+- [ ] Railway `pickfoo-web` Variables에 `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET` 추가 → 배포 → `/api/catalog/trend-signals/` 한 번 열어 수집 시작 → 결과 확인
+- [ ] 실제 수집 결과에서 검색어가 엉뚱한 글을 세는 조합이 있는지 확인하고 `CURATED_QUERIES` 조정
+- [ ] (선택) 팀 수동 SNS 후보: 양식 `data/sns_trend_template.csv` → `trend-candidates.json`
 - [ ] 실제 사용자 평가 수집(5명 이상, 가짜 평가 금지) → 트렌드 "앱 반응" 점수와 최근 7일 순위 채우기
 - [ ] 효과 측정: 3명이 "배민 직접 검색" vs "PICKFOO 버튼"으로 주문 화면까지 걸린 시간·검색 횟수
 - [ ] 발표 자료·판넬: 구현/미구현 구분, 측정한 값만 사용

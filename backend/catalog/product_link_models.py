@@ -1,3 +1,4 @@
+# PICKFOO_STEP250_PRICES
 """PICKFOO STEP240: administrator-owned links to actual product-share pages.
 
 Matching is normalized *exactly*, including aliases. We intentionally do not do
@@ -34,6 +35,8 @@ class IngredientProductLink(models.Model):
     aliases = models.TextField('추가 재료명(선택)', blank=True,
                                help_text='쉼표 또는 줄바꿈으로 구분해 주세요. 정확히 일치하는 명칭만 추가하세요.')
     note = models.CharField('연결 안내(선택)', max_length=300, blank=True)
+    price_krw = models.PositiveIntegerField('상품 표시 가격(원)', null=True, blank=True, help_text='판매처 화면에서 확인한 상품 1개 가격. 행사/배달비는 별도입니다.')
+    price_checked_at = models.DateField('가격 확인일', null=True, blank=True)
     is_active = models.BooleanField('화면에 사용', default=True)
     created_at = models.DateTimeField('등록일', auto_now_add=True)
     updated_at = models.DateTimeField('수정일', auto_now=True)

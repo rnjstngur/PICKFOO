@@ -1,3 +1,4 @@
+/* PICKFOO_STEP250_PRICES */
 /* PICKFOO_STEP240_PRODUCT_LINK_DB — read-only server links for each recipe ingredient. */
 (() => {
   'use strict';
@@ -94,6 +95,11 @@
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
       row.appendChild(link);
+      if (Number.isSafeInteger(p.price_krw) && p.price_krw >= 0) {
+        const confirmed = p.price_checked_at ? ' · 확인일 ' + p.price_checked_at : '';
+        row.appendChild(element('div', '💰 확인된 상품 가격 ' + p.price_krw.toLocaleString('ko-KR') + '원' + confirmed,
+          'font-size:12px;font-weight:650;color:#2b6d43;margin:2px 0 6px;'));
+      }
       if (p.note) row.appendChild(element('div', p.note, 'font-size:11px;color:#796b61;line-height:1.45;'));
     }
     // 상품 페이지 링크가 없는 앱은 "앱 열기 + 재료명 복사" 버튼을 둔다.
@@ -107,6 +113,18 @@
     return row;
   }
 
+
+  function providerTotal(ingredients, items, provider) {
+    let sum = 0;
+    let known = 0;
+    for (const name of ingredients) {
+      const matches = Array.isArray(items[name]) ? items[name] : [];
+      const row = matches.find(p => p.provider === provider && safeProductLink(p) &&
+        Number.isSafeInteger(p.price_krw) && p.price_krw >= 0);
+      if (row) { sum += row.price_krw; known += 1; }
+    }
+    return {sum, known, count: ingredients.length};
+  }
   function render(container, ingredients, items) {
     container.replaceChildren();
     container.appendChild(element('h4', '🏪 편의점 앱에서 재료 사기', 'margin:0 0 8px;font-size:17px;color:#513c2d;'));
@@ -114,6 +132,24 @@
                                   'margin:0 0 8px;color:#6a625a;font-size:12px;line-height:1.6;'));
     for (const name of ingredients) {
       container.appendChild(oneIngredientRow(name, items[name]));
+    }
+
+    const totals = element('div', null, 'background:#f4fbf5;border:1px solid #cde7d3;border-radius:10px;padding:12px;margin-top:12px;');
+    totals.appendChild(element('b', '💰 재료 가격 확인 · 예상 합계', 'display:block;color:#196b37;font-size:14px;margin-bottom:6px;'));
+    let hasPrice = false;
+    for (const [provider, label] of [['pocketcu', 'CU'], ['gs25', 'GS25']]) {
+      const info = providerTotal(ingredients, items, provider);
+      if (!info.known) continue;
+      hasPrice = true;
+      const full = info.known === info.count;
+      const caption = full ? '전체 재료 합계' : `가격 확인된 ${info.known}/${info.count}개만 합산 · 전체 가격 아님`;
+      totals.appendChild(element('div', `${label} · ${caption}: ${info.sum.toLocaleString('ko-KR')}원`,
+        'font-size:13px;line-height:1.65;color:#245637;'));
+    }
+    if (hasPrice) {
+      totals.appendChild(element('small', '상품 1개씩 기준 · 행사 조건, 옵션, 배송비 미포함 · 매장별 가격/재고 확인 필요',
+        'display:block;color:#617369;font-size:11px;line-height:1.5;margin-top:6px;'));
+      container.appendChild(totals);
     }
     container.appendChild(element('p', '상품의 정확한 규격, 가격, 재고와 알레르기 정보는 실제 판매처에서 확인하세요. 앱 열림은 Android 환경에 따라 달라질 수 있어요.',
                                   'font-size:11px;color:#8a7769;line-height:1.6;margin:8px 0 0;'));

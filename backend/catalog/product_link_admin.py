@@ -1,3 +1,4 @@
+# PICKFOO_STEP250_PRICES
 """Admin-only edit and Excel CSV import; never writable from public mobile UI."""
 from django import forms
 from django.contrib import admin, messages
@@ -15,12 +16,12 @@ class ProductLinkCsvForm(forms.Form):
 
 @admin.register(IngredientProductLink)
 class IngredientProductLinkAdmin(admin.ModelAdmin):
-    list_display = ('ingredient_name', 'provider', 'product_name', 'is_active', 'updated_at')
+    list_display = ('ingredient_name', 'provider', 'product_name', 'price_krw', 'price_checked_at', 'is_active', 'updated_at')
     list_filter = ('provider', 'is_active')
     search_fields = ('ingredient_name', 'product_name', 'aliases')
     readonly_fields = ('ingredient_key', 'created_at', 'updated_at')
     change_list_template = 'admin/catalog/ingredientproductlink/change_list.html'
-    fields = ('ingredient_name', 'provider', 'product_name', 'url', 'aliases', 'note',
+    fields = ('ingredient_name', 'provider', 'product_name', 'url', 'price_krw', 'price_checked_at', 'aliases', 'note',
               'is_active', 'ingredient_key', 'created_at', 'updated_at')
 
     def get_urls(self):
@@ -43,7 +44,7 @@ class IngredientProductLinkAdmin(admin.ModelAdmin):
             except ValueError as exc:
                 form.add_error('csv_file', str(exc))
             else:
-                self.message_user(request, f'상품 링크 등록 완료: 신규 {new}건, 갱신 {changed}건', messages.SUCCESS)
+                self.message_user(request, f'상품 링크/가격 등록 완료: 신규 {new}건, 갱신 {changed}건', messages.SUCCESS)
                 return HttpResponseRedirect(reverse('admin:catalog_ingredientproductlink_changelist'))
         context = {
             **self.admin_site.each_context(request),

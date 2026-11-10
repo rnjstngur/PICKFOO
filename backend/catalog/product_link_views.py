@@ -1,3 +1,4 @@
+# PICKFOO_STEP250_PRICES
 """Read-only public product-link endpoint. Only administrators may write records."""
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
@@ -32,6 +33,8 @@ def links_for_ingredients(request):
             'product_name': link.product_name,
             'url': link.url,
             'note': link.note,
+            'price_krw': link.price_krw,
+            'price_checked_at': link.price_checked_at.isoformat() if link.price_checked_at else None,
         }
         for key in matched:
             for original in requested[key]:

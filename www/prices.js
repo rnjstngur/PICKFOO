@@ -1,3 +1,4 @@
+/* PICKFOO_STEP250_PRICES */
 /* PICKFOO_PRICES — 조합 가격 표시 규칙(2026-11-10)
    - 편의점 조합: 재료마다 연결한 실제 상품의 판매가(정가)를 더한 값. 출처는 CU 공식 홈페이지 상품 목록(cu.bgfretail.com)
      또는 팀원이 앱의 상품 링크를 열어 확인한 가격. 행사가(1+1 등)는 반영하지 않는다.
@@ -13,7 +14,7 @@
 
   // 재료명 → 연결한 상품과 판매가. price가 null이면 아직 확인 전.
   const INGREDIENTS = {
-    '컵떡볶이':           { product: '오뚜기)컵떡볶이오리지널', price: 3900, source: CU_SITE },
+    '컵떡볶이':           { product: '오뚜기)컵떡볶이오리지널', price: 3900, source: APP_LINK },
     '스파게티 컵라면':     { product: '오뚜기)스파게티컵', price: 2200, source: CU_SITE },
     '불닭볶음면':         { product: '삼양)불닭볶음면컵', price: 1800, source: CU_SITE },
     '짜파게티':           { product: '농심)짜파게티큰사발컵', price: 1600, source: CU_SITE },
@@ -22,15 +23,15 @@
     '블루레몬 에이드 음료': { product: '26del)블루레몬에이드230', price: 900, source: CU_SITE },
     '사이다':             { product: '롯데)칠성사이다제로P500', price: 2500, source: CU_SITE },
     // 아래는 링크 상품명을 확인하는 중(확인되면 price를 채운다)
-    '소시지':             { product: '', price: null, source: APP_LINK },
-    '스트링치즈':         { product: '', price: null, source: APP_LINK },
-    '스위트콘':           { product: '', price: null, source: APP_LINK },
-    '모차렐라 치즈':       { product: '', price: null, source: APP_LINK },
-    '참치마요 삼각김밥':   { product: '주)리치참치마요삼각', price: null, source: APP_LINK },
-    '슬라이스 치즈':       { product: '', price: null, source: APP_LINK },
-    '까르보 불닭볶음면':   { product: '', price: null, source: APP_LINK },
-    '우유':               { product: '', price: null, source: APP_LINK },
-    '얼음컵':             { product: '', price: null, source: APP_LINK }
+    '소시지':             { product: '하림)참맛후랑크4입', price: 2400, source: APP_LINK },
+    '스트링치즈':         { product: '빙그레)통모짜스트링치즈', price: 1600, source: APP_LINK },
+    '스위트콘':           { product: '동원)저스트스위트콘340g', price: 3000, source: APP_LINK },
+    '모차렐라 치즈':       { product: '조흥)뿌려모짜슈레드40g', price: 1400, source: APP_LINK },
+    '참치마요 삼각김밥':   { product: '주)리치참치마요삼각', price: 1200, source: APP_LINK },
+    '슬라이스 치즈':       { product: '서울)체다치즈3매입', price: 1800, source: APP_LINK },
+    '까르보 불닭볶음면':   { product: '삼양)까르보불닭큰컵', price: 1800, source: APP_LINK },
+    '우유':               { product: '서울)흰우유200ml', price: 1200, source: APP_LINK },
+    '얼음컵':             { product: 'del)빅컵얼음230g', price: 1000, source: APP_LINK }
   };
   // 편의점에서 따로 파는 상품이 없는 재료(합계에서 빼고 안내만 한다)
   const NOT_SOLD = { '에스프레소 샷': '편의점 픽업 상품이 없어 합계에서 제외(매장 커피 머신 이용)' };

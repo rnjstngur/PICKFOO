@@ -205,13 +205,25 @@
     const shopSection = grid?.closest('.detail-section');
     if (!recipe || !shopSection) return;
     shopSection.classList.add('pf-merged');
+    // 원래 섹션의 앱 열기 버튼·검색어 복사 안내는 숨기고, 이 구매 칸과 재료별 상품 링크만 남긴다.
+    const convenience = /편의점|CU|GS25|세븐일레븐|이마트24/.test(String(recipe.brand || ''));
     [...shopSection.children].forEach(c => {
-      if (c.matches('h3') || c.matches('.page-desc') || c.matches('.shopping-grid')) c.style.display = 'none';
+      if (c.id === 'pf-order-plan') return;
+      if (c.id === 'pickfoo-product-links-db') {
+        // 스타벅스·써브웨이 재료는 매장 메뉴 옵션이라 편의점 상품 링크 안내를 보여주지 않는다.
+        c.style.display = convenience ? '' : 'none';
+        return;
+      }
+      c.style.display = 'none';
     });
     const existing = detail.querySelector('#pf-order-plan');
     if (existing && existing.dataset.recipe === recipe.id) return;
     if (existing) existing.remove();
     shopSection.prepend(render(recipe));
+    if (!convenience) {
+      const note = shopSection.querySelector('#pf-order-plan .pf-note:last-of-type');
+      if (note) note.textContent = '장바구니 담기·결제는 배민 앱에서 직접 진행돼요. 배민이 외부 앱의 자동 담기 기능을 공개하지 않아 제공하지 않아요. 옵션은 메뉴를 고른 뒤 옵션 화면에서 위 목록대로 선택하세요.';
+    }
   }
   new MutationObserver(attach).observe(detail, { childList: true, subtree: true });
   attach();

@@ -34,3 +34,10 @@ test('평가 이력의 맛이 비슷한 조합이 더 높은 이력 점수를 �
  assert.ok(R.historyScore(sweet,{history:hist}));
  assert.equal(R.historyScore(spicy,{history:hist}),null);
 });
+test('저장한 매운맛 단계보다 매운 조합은 개인화 추천에서 제외한다',()=>{
+ const mild={id:'m',category:'한식',brand:'CU',spicy:0,price:3000,ingredients:['밥']};
+ const hot={id:'h',category:'한식',brand:'CU',spicy:2,price:3000,ingredients:['불닭']};
+ assert.deepEqual(R.rank([hot,mild],{spicy:'0'}).map(r=>r.id),['m']);
+ assert.deepEqual(R.rank([hot,mild],{spicy:'2'}).map(r=>r.id).sort(),['h','m']);
+ assert.deepEqual(R.rank([hot,mild],{spicy:'all'}).map(r=>r.id).sort(),['h','m']);
+});

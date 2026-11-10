@@ -58,6 +58,12 @@
     // 입력된 재료명 문자열의 포함 여부만 확인한다. 알레르기 안전을 보장하지 않는다.
     return denied.some(item=>ingredient.includes(item));
   }
+  // 저장한 매운맛 단계보다 더 매운 조합은 제외한다(맵지 않음=0이면 약간 매움·매움 제외).
+  function tooSpicy(recipe, profile={}) {
+    if (profile.spicy==null || profile.spicy==='' || profile.spicy==='all') return false;
+    const want=Number(profile.spicy), have=Number(recipe.spicy);
+    return Number.isFinite(want) && Number.isFinite(have) && have > want;
+  }
   // 저장한 예산은 필수 조건으로 적용한다. 가격을 모르는 후보도 예산 충족을 확인할 수 없어 제외한다.
   function overBudget(recipe, profile={}) {
     const budget=Number(profile.budget);
@@ -104,7 +110,7 @@
   }
 
   function rank(recipes,profile={}) {
-    return recipes.filter(r=>!conflicts(r,profile) && !overBudget(r,profile))
+    return recipes.filter(r=>!conflicts(r,profile) && !overBudget(r,profile) && !tooSpicy(r,profile))
       .map((r,index)=>({r,index,points:hybridScore(r,profile).total}))
       .sort((a,b)=>b.points-a.points || a.index-b.index).map(x=>x.r);
   }
@@ -254,5 +260,5 @@ function reason(recipe, profile = {}) {
       ' · 매운맛 정보 없음';
   }
 
-  return {score,conflicts,overBudget,rank,flavorTags,flavorMatches,reason,historyScore,hybridScore,normalizeMenuCategory,scoreCatalogMenu,reasonCatalogMenu};
+  return {score,conflicts,overBudget,tooSpicy,rank,flavorTags,flavorMatches,reason,historyScore,hybridScore,normalizeMenuCategory,scoreCatalogMenu,reasonCatalogMenu};
 });

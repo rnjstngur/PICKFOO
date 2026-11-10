@@ -210,9 +210,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
 
             showMessage(
-                "음식 취향이 데이터베이스에 저장되었습니다!",
+                "음식 취향이 저장되었습니다! 맞춤 추천 화면으로 이동합니다.",
                 false
             );
+            setTimeout(() => { window.location.href = "index.html"; }, 900);
 
         } catch (error) {
             showMessage(error.message);

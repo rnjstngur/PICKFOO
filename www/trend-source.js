@@ -43,7 +43,8 @@
     box.dataset.recipe = r.id;
     const items = parts(r.sourceNote);
     const links = items.filter(x => x.url);
-    const tag = links.length ? '🔗 외부 출처 확인' : (r.curated ? '🧪 응용 조합 · 외부 출처 없음' : '👤 사용자 등록 조합');
+    const datedSource = !!(window.PICKFOO_TREND && window.PICKFOO_TREND.CURATED_SOURCES[r.id]);
+    const tag = (links.length || datedSource) ? '🔗 외부 출처 확인' : (r.curated ? '🧪 응용 조합 · 외부 출처 없음' : '👤 사용자 등록 조합');
     box.appendChild(el('div', tag, 'font-weight:800;font-size:13px;color:#4a3a2e;margin-bottom:6px;'));
     const T = window.PICKFOO_TREND;
     if (T && r.curated) {

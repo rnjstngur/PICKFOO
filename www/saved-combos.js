@@ -78,11 +78,32 @@
     });
   }
 
+  // ── 시연 모드 스위치(샘플 평가 표시) ──
+  const DEMO_KEY = 'pickfoo_demo_reviews';
+  function demoOn() { try { return localStorage.getItem(DEMO_KEY) === '1'; } catch (_) { return false; } }
+  function renderDemoSwitch() {
+    if (!myView || myView.querySelector('#pf-demo-switch')) return;
+    const box = el('label', null, 'display:flex;gap:10px;align-items:flex-start;margin:14px 0;padding:12px 14px;border:1px dashed #e0b45a;border-radius:12px;background:#fffaf0;font-size:13px;color:#5a4332;cursor:pointer;');
+    box.id = 'pf-demo-switch';
+    const cb = el('input'); cb.type = 'checkbox'; cb.checked = demoOn(); cb.style.marginTop = '3px';
+    const txt = el('span');
+    txt.append(el('b', '🧪 시연 모드 (샘플 평가 표시)'), el('br'),
+      el('span', '발표 시연용이에요. 켜면 트렌드의 앱 반응 점수에 샘플 평가가 더해지고 "시연용 샘플" 표시가 붙어요. 서버에는 저장되지 않아요.', 'font-size:12px;color:#8a7769;'));
+    cb.addEventListener('change', () => {
+      try { if (cb.checked) localStorage.setItem(DEMO_KEY, '1'); else localStorage.removeItem(DEMO_KEY); } catch (_) {}
+      window.dispatchEvent(new Event('pickfoo-demo-change'));
+    });
+    box.append(cb, txt);
+    const list = myView.querySelector('#pf-saved-list');
+    if (list) list.after(box); else myView.appendChild(box);
+  }
+
   if (detail) new MutationObserver(attachButton).observe(detail, { childList: true, subtree: true });
   if (myView) new MutationObserver(() => { if (myView.classList.contains('active')) renderList(); })
     .observe(myView, { attributes: true, attributeFilter: ['class'] });
   attachButton();
   renderList();
+  renderDemoSwitch();
 
   // 예전 단독 마이페이지에서 넘어온 경우 마이 탭 열기
   if (location.hash === '#my') {

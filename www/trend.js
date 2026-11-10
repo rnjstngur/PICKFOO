@@ -173,7 +173,7 @@
   <button type="button" class="pt-tab" data-k="steady" aria-pressed="false">스테디</button>
 </div>
 <div class="pt-list" aria-live="polite"></div>
-<p class="pt-policy">점수 = 0.6 × 외부 최신성(반감기 ${T.HALF_LIFE_DAYS}일, 소개 후 ${T.RECENT_DAYS}일 지나면 스테디로 이동) + 0.4 × 앱 반응(최근 7일 서로 다른 평가자 수·평균 별점).<br>SNS 조합 채택 기준: ① 공개 게시물 주소·게시일 확인 ② 서로 다른 계정 ${T.MIN_ACCOUNTS}곳 이상이 올렸거나 한 게시물 반응 ${T.MIN_REACTIONS.toLocaleString()} 이상 ③ 재료·옵션 2개 이상 확인 ④ 주류 제외. 하나라도 못 맞추면 목록에서 빼요. 팀이 주 1회 SNS·기사를 직접 찾아 넣고(자동 수집 아님), 채택과 순위는 이 규칙으로 계산해요.</p>
+<p class="pt-policy">점수 = 0.6 × 외부 최신성(반감기 ${T.HALF_LIFE_DAYS}일, 소개 후 ${T.RECENT_DAYS}일 지나면 스테디로 이동) + 0.4 × 앱 반응(최근 7일 서로 다른 평가자 수·평균 별점).<br>SNS 조합 채택 기준: ① 공개 게시물 주소·게시일 확인 ② 서로 다른 계정 ${T.MIN_ACCOUNTS}곳 이상이 올렸거나 한 게시물 반응 ${T.MIN_REACTIONS.toLocaleString()} 이상 ③ 재료·옵션 2개 이상 확인 ④ 주류 제외. 하나라도 못 맞추면 목록에서 빼요. 블로그 언급은 카카오(다음) 공식 검색 API로 하루 한 번 자동 수집하고, 기사 출처는 팀이 확인해 넣어요.</p>
 <p class="pt-policy pt-excluded"></p>
 <p class="pt-policy pt-collect"></p>`;
   const anchor = document.getElementById('pickfooTrending7d') || results;
@@ -187,14 +187,33 @@
 
   function fmtAge(age) { return age == null ? '소개일 미확인' : (age === 0 ? '오늘 소개' : `${age}일 전 소개`); }
 
+  // 시연 모드(마이 탭 스위치): 화면에 '시연용 샘플'로 표시되는 샘플 평가를 앱 반응에 더한다. 서버·DB에는 저장하지 않는다.
+  const DEMO_KEY = 'pickfoo_demo_reviews';
+  const DEMO_REVIEWS = {
+    'pf-curated-05': { n: 4, avg: 4.5 }, // 불닭 짜파게티
+    'pf-curated-07': { n: 3, avg: 4.3 }, // 아샷추 편의점 버전
+    'pf-curated-10': { n: 3, avg: 4.0 }, // 슈렉 프라푸치노
+    'pf-curated-02': { n: 2, avg: 4.5 }, // 불닭 콘치즈
+    'pf-curated-15': { n: 2, avg: 4.0 }  // 이탈리안 비엠티
+  };
+  function demoOn() { try { return localStorage.getItem(DEMO_KEY) === '1'; } catch (_) { return false; } }
+  function withDemo(id, rv) {
+    const d = demoOn() && DEMO_REVIEWS[id];
+    if (!d) return { n: rv.n || 0, avg: rv.avg || 0, demo: false };
+    const n = (rv.n || 0) + d.n;
+    const avg = ((rv.avg || 0) * (rv.n || 0) + d.avg * d.n) / n;
+    return { n, avg: Math.round(avg * 10) / 10, demo: true };
+  }
+  window.addEventListener('pickfoo-demo-change', () => render());
+
   function items() {
     const app = window.PICKFOO_APP;
     const recipes = (app && app.recipes) ? app.recipes().filter(r => r.curated) : [];
     const fromApp = recipes.map(r => {
       const src = T.CURATED_SOURCES[r.id] || {};
-      const rv = reviews[r.id] || {};
-      return { key: r.id, name: r.name, brand: r.brand, inApp: true, sourceDate: src.date || null,
-               sourceTitle: src.title || '', sourceUrl: src.url || '', reviewers7d: rv.n || 0, avg7d: rv.avg || 0,
+      const rv = withDemo(r.id, reviews[r.id] || {});
+      return { key: r.id, name: r.name, brand: r.brand, inApp: true, sourceDate: src.date || null, demo: rv.demo,
+               sourceTitle: src.title || '', sourceUrl: src.url || '', reviewers7d: rv.n, avg7d: rv.avg,
                ingredients: r.ingredients || [] };
     });
     const fromSources = candidates.map(c => ({ key: c.id, name: c.name, brand: c.brand, inApp: false,
@@ -212,6 +231,11 @@
     const excluded = all.filter(x => T.isSns(x) && !T.snsCheck(x).ok).length;
     const exEl = sec.querySelector('.pt-excluded');
     exEl.textContent = excluded ? `SNS 후보 중 채택 기준을 못 맞춘 ${excluded}개는 제외했어요.` : '';
+    let banner = sec.querySelector('.pt-demo');
+    if (demoOn()) {
+      if (!banner) { banner = document.createElement('p'); banner.className = 'pt-demo'; banner.style.cssText = 'margin:0 0 8px;padding:7px 10px;border-radius:8px;background:#fff1d9;color:#7a4a12;font-size:12px;font-weight:700'; sec.querySelector('.pt-tabs').before(banner); }
+      banner.textContent = '🧪 시연 모드: 앱 반응 점수에 시연용 샘플 평가가 포함돼 있어요(실제 사용자 평가 아님). 마이 탭에서 끌 수 있어요.';
+    } else if (banner) banner.remove();
     const col = sec.querySelector('.pt-collect');
     if (signals && signals.collectedAt) {
       const names = (signals.sources || []).map(s => ({ kakao_blog: '다음(카카오) 블로그', naver_blog: '네이버 블로그', youtube: '유튜브' })[s] || s).join('·');
@@ -250,6 +274,7 @@
       }
       meta.append(` ${x.brand} · ${fmtAge(x.trend.age)} · 외부 ${x.trend.external.toFixed(1)} / 앱 반응 ${x.trend.inApp.toFixed(1)} `);
       if (x.signalNote) meta.append(x.signalNote + ' ');
+      if (x.demo) { const dm = document.createElement('span'); dm.className = 'pt-chip'; dm.style.background = '#ffe9c7'; dm.textContent = '🧪 시연용 샘플 평가 포함'; meta.appendChild(dm); }
       if (x.autoCollected) { const ac = document.createElement('span'); ac.className = 'pt-chip'; ac.textContent = '자동 수집'; meta.appendChild(ac); }
       if (T.isSns(x)) {
         const spread = [];

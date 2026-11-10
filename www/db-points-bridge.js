@@ -38,7 +38,7 @@
     if (balance) balance.textContent = '…';
     renderMessage(history, 'PostgreSQL 포인트 내역을 불러오는 중입니다.');
     const label = document.querySelector('#pointsView .points-card small');
-    if (label) label.textContent = 'DB 사진 리뷰 최초 1회 10P (가상 포인트)';
+    if (label) label.textContent = '사진 리뷰: 조합별 최초 1회 10P (가상 포인트)';
     const hint = document.querySelector('#pointsView .section-heading .subtle');
     if (hint) hint.textContent = 'PostgreSQL에 저장됨';
     try {

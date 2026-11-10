@@ -242,7 +242,7 @@
       if (file) {
         const result = await uploadPhoto(reviewId, file, token);
         awardedPoints = Number(result.points_awarded ?? 0);
-        status(`✅ ${isExisting ? '기존 리뷰 사진 추가/교체' : '리뷰·사진 저장'} 성공! (리뷰 ID: ${reviewId}) DB 포인트 +${awardedPoints}P 적립되었습니다.`);
+        status(`✅ ${isExisting ? '기존 리뷰 사진 추가/교체' : '리뷰·사진 저장'} 성공! (리뷰 ID: ${reviewId}) ${awardedPoints === 10 ? '📸 사진 리뷰 +10P 적립!' : '이 조합은 이미 적립되어 추가 포인트가 없습니다.'}`);
         console.log('✅ PICKFOO DB 리뷰 사진 업로드', result);
         window.PICKFOO_DB_POINTS?.refresh();
       } else {
@@ -252,7 +252,7 @@
       // 신규 작성 직후에도 동일 조합에서 새 리뷰를 중복 등록하지 않도록 상태 갱신
       if (!isExisting) {
         showExisting(recipeId, { id: reviewId, rating, content });
-        status(`✅ ${file ? '리뷰·사진' : '리뷰'} 저장 완료! (리뷰 ID: ${reviewId}) ${file ? `DB 포인트 +${awardedPoints}P` : '사진 미첨부: DB 포인트 없음'}`);
+        status(`✅ ${file ? '리뷰·사진' : '리뷰'} 저장 완료! (리뷰 ID: ${reviewId}) ${file ? (awardedPoints === 10 ? '사진 리뷰 +10P 적립!' : '이 조합은 이미 적립되어 추가 0P') : '사진 미첨부: DB 포인트 없음'}`);
       }
     } catch (error) {
       console.error('PICKFOO STEP 188 DB 리뷰 오류:', error);

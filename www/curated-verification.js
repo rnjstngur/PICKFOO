@@ -190,7 +190,7 @@
     photoInput.required = false;
     if (nameInput) { nameInput.required = false; const label = nameInput.closest('label'); if (label) label.hidden = true; }
     if (formTitle) formTitle.textContent = '전시 조합 검증 평가';
-    if (formDescription) formDescription.textContent = '실제 로그인 계정으로 별점과 후기를 PostgreSQL에 저장합니다. 사진은 선택 사항입니다. 이 평가에는 포인트를 지급하지 않습니다.';
+    if (formDescription) formDescription.textContent = '로그인 후 별점·후기를 저장합니다. 사진이 정상 업로드되면 조합별 최초 1회 10P가 적립됩니다. 사진 교체 시에는 중복 적립되지 않습니다.';
     submitBtn.textContent = '💾 검증 평가 저장하기';
     status('기존 로컬 시연 후기는 검증 점수에 반영되지 않습니다.');
     const seq = reviewSeq;
@@ -228,6 +228,7 @@
     submitBtn.disabled = true;
     status('DB에 평가를 저장하는 중…');
     let reviewId = currentReview?.id || null;
+    let photoUploadResult = null; // PICKFOO_STEP256_PHOTO_REVIEW_POINTS
     try {
       const token = await csrf();
       const headers = {'Content-Type':'application/json', 'X-CSRFToken':token};
@@ -245,19 +246,30 @@
       if (file) {
         try {
           const multi = new FormData(); multi.append('photo',file);
-          await requestJson(`/api/catalog/curated/reviews/${reviewId}/photo/`, {
+          photoUploadResult = await requestJson(`/api/catalog/curated/reviews/${reviewId}/photo/`, {
             method:'POST', headers:{'X-CSRFToken':token}, body:multi
           });
+          window.PICKFOO_DB_POINTS?.refresh();
         } catch (err) {
           status('별점과 후기는 저장됐지만 사진 업로드는 실패했습니다: '+err.message+' 사진만 다시 선택해 재시도할 수 있어요.', true);
           await Promise.all([refreshSummary(), loadDetail(key)]);
           return;
         }
       }
-      status('✅ 실제 DB 평가가 저장됐습니다. 검증 조건은 서버에서 자동 계산합니다.');
+      const awarded = Number(photoUploadResult?.points_awarded || 0);
+      const message = !photoUploadResult
+        ? '사진 미첨부: 포인트 적립 없음.'
+        : awarded === 10
+          ? '📸 사진 리뷰 +10P 적립 완료!'
+          : '📸 사진 저장 완료. 이 조합의 사진 리뷰는 이미 적립되어 추가 포인트가 없습니다.';
+      status('✅ 실제 DB 평가가 저장됐습니다. ' + message);
       await Promise.all([refreshSummary(), loadDetail(key)]);
       // Navigate back to refreshed detail screen using the app's normal link.
       view.querySelector('[data-view="detailView"]')?.click();
+      if (awarded === 10) {
+        // Review page navigates away immediately; make the reward visible to the user.
+        window.alert('📸 사진 리뷰 +10P 적립 완료!\n포인트 탭에서 적립 내역을 확인하세요.');
+      }
     } catch (e) { status(e.message, true); }
     finally { submitBtn.disabled = false; }
   }, true);

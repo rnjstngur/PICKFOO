@@ -17,6 +17,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
 from .curated_models import CuratedCombo, CuratedComboReview
+from points.services import get_balance, reward_curated_photo_review
 
 logger = logging.getLogger(__name__)
 
@@ -192,7 +193,12 @@ def curated_photo_upload(request, review_id):
             rev.photo.storage.delete(old_name)
         except Exception:
             logger.exception('이전 평가 사진 정리 실패')
+    # PICKFOO_STEP256_PHOTO_REVIEW_POINTS: award only after saving the image.
+    # A replacement photo, retry, or deleted-and-recreated review never double-pays.
+    points_awarded = reward_curated_photo_review(rev)
     return JsonResponse({'message': '사진 업로드 성공',
+                         'points_awarded': points_awarded,
+                         'points_balance': get_balance(request.user),
                          'photo_url': request.build_absolute_uri(reverse('curated-photo-view', args=[rev.id])),
                          'verification': verification_for(rev.combo)})
 

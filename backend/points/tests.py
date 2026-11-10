@@ -75,16 +75,16 @@ class PointsApiTests(TestCase):
         self.assertEqual(result.json()['points_awarded'],0)
         self.assertEqual(self.client.get('/api/points/').json()['balance'],10)
 
-    def test_photo_reward_is_limited_to_once_per_day(self):
-        # 새 개인 조합을 계속 만들어 본인 사진 리뷰를 다는 방식의 반복 적립을 막는다.
+    def test_photo_reward_for_distinct_combo_same_day(self):
+        # STEP256: 서로 다른 조합의 첫 사진 리뷰에는 각각 10P를 지급한다.
         self.client.post(f'/api/catalog/reviews/{self.review.pk}/photo/',{'photo':self.photo()})
         second=Recipe.objects.create(created_by=self.alice,name='두번째 조합',category='분식',
                                      ingredients=['김'],steps=['섞기'],estimated_price=3000)
         review2=RecipeReview.objects.create(user=self.alice,recipe=second,rating=5,content='두번째')
         result=self.client.post(f'/api/catalog/reviews/{review2.pk}/photo/',{'photo':self.photo()})
         self.assertEqual(result.status_code,200,result.content)
-        self.assertEqual(result.json()['points_awarded'],0)
-        self.assertEqual(self.client.get('/api/points/').json()['balance'],10)
+        self.assertEqual(result.json()['points_awarded'],10)
+        self.assertEqual(self.client.get('/api/points/').json()['balance'],20)
 
     def test_deleting_recipe_also_cleans_review_photo(self):
         self.client.post(f'/api/catalog/reviews/{self.review.pk}/photo/', {'photo':self.photo()})

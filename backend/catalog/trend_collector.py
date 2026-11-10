@@ -101,11 +101,18 @@ def tokens_for(query: str) -> list[str]:
     return [t.lower() for t in query.split() if t and t not in STOP_WORDS]
 
 
-def is_relevant(query: str, *texts: str) -> bool:
-    """검색어의 핵심 단어가 제목·요약에 모두 들어 있어야 관련 게시물로 본다(띄어쓰기 무시)."""
-    body = _norm(' '.join(texts))
-    toks = tokens_for(query)
-    return bool(toks) and all(t.replace(' ', '') in body for t in toks)
+def is_relevant(query: str, title: str, summary: str = '') -> bool:
+    """관련 게시물 판정(띄어쓰기 무시).
+    - 제목에 핵심 단어가 모두 있으면 관련.
+    - 본문 요약은 핵심 단어가 붙어서 한 덩어리로 나올 때만 인정한다(예: '불닭콘치즈').
+      2026-11-10 운영 수집에서 맛집 글 요약에 '불닭'과 '콘치즈'가 따로 나오는 경우가 섞여 기준을 좁혔다."""
+    toks = [t.replace(' ', '') for t in tokens_for(query)]
+    if not toks:
+        return False
+    head = _norm(title)
+    if all(t in head for t in toks):
+        return True
+    return ''.join(toks) in _norm(summary)
 
 
 def combos() -> list[dict]:

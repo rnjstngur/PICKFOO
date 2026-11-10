@@ -3,7 +3,7 @@
 다른 AI(Codex, Claude)와 팀원이 번갈아 작업한다. **작업을 마칠 때마다 이 파일을 갱신한다.**
 비밀번호, 비밀키, `.env` 값, DB 접속 주소, 토큰은 이 파일에 적지 않는다.
 
-- 마지막 갱신: 2026-11-10 15:40 KST, Claude
+- 마지막 갱신: 2026-11-10 15:50 KST, Claude
 - 발표: 2026-11-11
 
 ---
@@ -202,4 +202,11 @@
 - 테스트: `node --test tests/recommendation.test.cjs tests/trend.test.cjs` 18개 통과. Playwright(390px, 정적 서버, API 가짜 응답)로 CU/GS25/편의점 각각 8개 표시, 구매 칸·편의점 앱 버튼 화면 확인.
 - 확인 안 됨: 실제 폰에서 "우리동네GS 검색"·"포켓CU 검색" 버튼이 각 앱을 여는지(코드 경로는 기존 `MainActivity` 매핑과 같음), 클립보드 붙여넣기.
 - 남은 일(계획만): 재료별 실제 상품 링크를 더 등록하려면 관리자 화면(Django admin → Ingredient product links)에서 각 앱의 "공유" 링크를 붙여넣거나 CSV 가져오기. DB 변경·마이그레이션 없음.
-- 카카오 키: 사용자가 Railway에 넣었다고 함(15:15). 수집 결과 확인은 아직.
+
+### 9-7. 카카오 키 연결 · 첫 운영 수집 (2026-11-10 15:22, 실제 확인)
+- 사용자가 Railway `pickfoo-web` Variables에 `KAKAO_REST_API_KEY`를 넣음(값은 기록하지 않음). `/api/catalog/trend-signals/` → `configured.kakao: true`.
+- 첫 수집은 15:2x 재배포 때 백그라운드 스레드가 끊겨 실패 → 다시 호출해 `collectedAt 2026-11-10T15:22:31+09:00`, 33개 조합 수집 확인.
+- 확인한 문제: 카카오 블로그 검색 결과 요약(contents)에 단어가 따로 들어간 맛집 글이 섞임(예: "불닭 콘치즈"에 낙곱새 맛집 글). 아샷추 50, 불닭 짜파게티 42 등 작성자 수가 부풀려짐.
+- 수정(`backend/catalog/trend_collector.py` `is_relevant`): 제목에 핵심 단어가 모두 있을 때, 또는 요약에 단어가 붙은 한 덩어리(예: `불닭콘치즈`)로 나올 때만 관련 글로 인정. 테스트 1개 추가(`test_summary_only_counts_when_words_appear_together`).
+- 다음 수집(24시간 뒤 첫 요청, 또는 재배포 후 `python manage.py collect_trends`)부터 새 기준 적용. 재배포 후 숫자 다시 확인 필요.
+- 주의: Railway 재배포 직후 실행 중이던 수집은 끊긴다. 발표 전에 마지막 배포 후 API를 한 번 열어 `collectedAt`이 채워졌는지 확인.

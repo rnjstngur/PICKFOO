@@ -29,6 +29,11 @@ class TrendCollectorTests(TestCase):
         self.assertFalse(tc.is_relevant('불닭 콘치즈', '불닭볶음면 후기'))
         self.assertTrue(tc.is_relevant('써브웨이 이탈리안비엠티 꿀조합', '써브웨이 이탈리안 비엠티 주문법'))
 
+    def test_summary_only_counts_when_words_appear_together(self):
+        # 맛집 글 요약에 단어가 따로 나오면 제외, 붙어서 나오면 인정
+        self.assertFalse(tc.is_relevant('불닭 콘치즈', '수원역 낙곱새 맛집', '매운맛 불닭 소스에 계란찜, 콘치즈 사이드'))
+        self.assertTrue(tc.is_relevant('불닭 콘치즈', '오늘 야식', '편의점 불닭 콘치즈 만들어 먹음'))
+
     def test_summary_counts_distinct_authors_and_drops_old_or_unrelated_posts(self):
         posts = [post('a', 1), post('a', 3), post('b', 10), post('c', 25), post('d', 60),
                  post('e', 200), post('f', 2, title='다른 음식')]

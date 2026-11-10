@@ -70,10 +70,13 @@ class TrendCollectorTests(TestCase):
 
     def test_stale_after_24_hours(self):
         self.assertTrue(tc.is_stale(None))
-        fresh = {'collectedAt': (NOW - timedelta(hours=2)).isoformat()}
-        old = {'collectedAt': (NOW - timedelta(hours=30)).isoformat()}
+        fresh = {'collectedAt': (NOW - timedelta(hours=2)).isoformat(), 'ruleVersion': tc.RULE_VERSION}
+        old = {'collectedAt': (NOW - timedelta(hours=30)).isoformat(), 'ruleVersion': tc.RULE_VERSION}
         self.assertFalse(tc.is_stale(fresh, NOW))
         self.assertTrue(tc.is_stale(old, NOW))
+        # 규칙 버전이 바뀐 결과는 2시간 전 것이어도 다시 수집한다.
+        self.assertTrue(tc.is_stale({**fresh, 'ruleVersion': 1}, NOW))
+        self.assertTrue(tc.is_stale({'collectedAt': fresh['collectedAt']}, NOW))
 
     def test_blog_root_counts_one_blog_once(self):
         self.assertEqual(tc.blog_root('https://blog.naver.com/abc/223'), 'blog.naver.com/abc')

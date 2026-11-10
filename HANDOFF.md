@@ -208,5 +208,5 @@
 - 첫 수집은 15:2x 재배포 때 백그라운드 스레드가 끊겨 실패 → 다시 호출해 `collectedAt 2026-11-10T15:22:31+09:00`, 33개 조합 수집 확인.
 - 확인한 문제: 카카오 블로그 검색 결과 요약(contents)에 단어가 따로 들어간 맛집 글이 섞임(예: "불닭 콘치즈"에 낙곱새 맛집 글). 아샷추 50, 불닭 짜파게티 42 등 작성자 수가 부풀려짐.
 - 수정(`backend/catalog/trend_collector.py` `is_relevant`): 제목에 핵심 단어가 모두 있을 때, 또는 요약에 단어가 붙은 한 덩어리(예: `불닭콘치즈`)로 나올 때만 관련 글로 인정. 테스트 1개 추가(`test_summary_only_counts_when_words_appear_together`).
-- 다음 수집(24시간 뒤 첫 요청, 또는 재배포 후 `python manage.py collect_trends`)부터 새 기준 적용. 재배포 후 숫자 다시 확인 필요.
+- `RULE_VERSION = 2` 추가: 저장된 결과의 `ruleVersion`이 다르면 24시간 전이라도 API 첫 요청 때 다시 수집. 그래서 배포 후 API를 한 번 열면 새 기준으로 다시 모임(자동).
 - 주의: Railway 재배포 직후 실행 중이던 수집은 끊긴다. 발표 전에 마지막 배포 후 API를 한 번 열어 `collectedAt`이 채워졌는지 확인.

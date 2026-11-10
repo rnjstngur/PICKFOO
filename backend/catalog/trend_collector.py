@@ -246,6 +246,7 @@ def collect(now: datetime | None = None, fetchers: dict | None = None) -> dict:
             items[combo['key']] = row
     result = {
         'collectedAt': now.astimezone(KST).isoformat(timespec='seconds'),
+        'ruleVersion': RULE_VERSION,
         'sources': [s for s, fn in use.items() if fn],
         'windowDays': WINDOW_DAYS, 'spreadDays': SPREAD_DAYS,
         'items': items, 'errors': errors[:50],
@@ -271,8 +272,15 @@ def load() -> dict | None:
         return None
 
 
+# 관련 글 판정 규칙이 바뀌면 올린다. 저장된 결과의 버전이 다르면 24시간이 안 지나도 다시 수집한다.
+# 1: 제목+요약에 단어가 모두 있으면 인정 / 2: 제목, 또는 요약에 붙은 표현만 인정(2026-11-10)
+RULE_VERSION = 2
+
+
 def is_stale(result: dict | None, now: datetime | None = None) -> bool:
     if not result or not result.get('collectedAt'):
+        return True
+    if result.get('ruleVersion', 1) != RULE_VERSION:
         return True
     now = now or datetime.now(dt_timezone.utc)
     try:

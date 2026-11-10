@@ -3,7 +3,7 @@
 다른 AI(Codex, Claude)와 팀원이 번갈아 작업한다. **작업을 마칠 때마다 이 파일을 갱신한다.**
 비밀번호, 비밀키, `.env` 값, DB 접속 주소, 토큰은 이 파일에 적지 않는다.
 
-- 마지막 갱신: 2026-11-10 10:45 KST, Claude
+- 마지막 갱신: 2026-11-10 11:00 KST, Claude
 - 발표: 2026-11-11
 
 ---
@@ -80,6 +80,15 @@
 | 스크립트 | `www/index.html` | 새 스크립트 3개, 캐시 버전 번호(app v244, order-plan v244, recommendation v243) |
 | 테스트 | `tests/recommendation.test.cjs`, `tests/trend.test.cjs` | 추천 4개, 트렌드 5개 추가 |
 
+### 4-1. SNS 트렌드 채택 기준 (2026-11-10 추가, 구현 완료 / 데이터는 아직 없음)
+- 파일: `www/trend.js`, `tests/trend.test.cjs`(2개 추가, 총 15개 통과), `data/sns_trend_template.csv`(팀 수집 양식)
+- 수집: 팀이 인스타그램·유튜브 쇼츠·틱톡·블로그에서 직접 찾아 양식에 기록 → `www/trend-candidates.json`에 추가. **자동 수집 아님**(인스타 약관상 스크래핑 불가, 공식 API는 비즈니스 계정·앱 심사 필요)
+- 판정(코드): ① 공개 게시물 주소·게시일 ② 서로 다른 계정 3곳 이상 또는 한 게시물 반응 1,000 이상 ③ 재료·옵션 2개 이상 ④ 주류 제외. 하나라도 못 맞추면 목록 제외
+- 점수: SNS 외부 최신성에 확산 가중치(3개 계정 이상 1.0, 반응 기준만 0.8)를 곱함
+- 화면: 트렌드 패널에 "SNS 화제" 탭, 플랫폼·계정 수·반응·확인일·광고 표기·판매 확인 배지
+- JSON 필드: `platform`(instagram/youtube/tiktok/blog), `sourceUrl`, `sourceDate`, `accounts`, `reactions`, `observedAt`, `sponsored`, `availability`(confirmed/unverified), `ingredients`
+- **아직 SNS 데이터 0건** → "SNS 화제" 탭은 빈 상태 문구가 나온다
+
 ## 5. DB 변경, 마이그레이션
 
 - **DB 스키마 변경 없음, 새 마이그레이션 없음.** 포인트 제한은 기존 `PointEntry` 조회만 한다.
@@ -103,6 +112,7 @@
 
 ### 계획만 있음 (구현 안 됨)
 - [ ] Railway GitHub 자동 배포: 저장소 주인이 Railway GitHub 앱 권한 허용
+- [ ] SNS 조합 5~10개 수집(양식 `data/sns_trend_template.csv`) → `trend-candidates.json`에 추가 → 배포
 - [ ] 실제 사용자 평가 수집(5명 이상, 가짜 평가 금지) → 트렌드 "앱 반응" 점수와 최근 7일 순위 채우기
 - [ ] 효과 측정: 3명이 "배민 직접 검색" vs "PICKFOO 버튼"으로 주문 화면까지 걸린 시간·검색 횟수
 - [ ] 발표 자료·판넬: 구현/미구현 구분, 측정한 값만 사용

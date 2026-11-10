@@ -20,3 +20,21 @@ test('오래된 조합이라도 이번 주 앱 반응이 크면 최근 소개 �
 test('누적 인기만 있는 과거 조합은 트렌드 점수 0',()=>{
  assert.equal(T.trendScore({sourceDate:'2018-09-24'},now).total,0);
 });
+test('SNS 후보는 원문·확산·재료·주류 기준을 모두 맞춰야 채택된다',()=>{
+ const base={platform:'instagram',sourceUrl:'https://www.instagram.com/p/x/',sourceDate:'2026-11-01',ingredients:['불닭볶음면','스트링치즈'],accounts:3,reactions:0};
+ assert.equal(T.snsCheck(base).ok,true);
+ assert.equal(T.snsCheck({...base,accounts:1}).ok,false);
+ assert.equal(T.snsCheck({...base,accounts:1,reactions:1500}).ok,true);
+ assert.equal(T.snsCheck({...base,ingredients:['불닭볶음면']}).ok,false);
+ assert.equal(T.snsCheck({...base,sourceUrl:''}).ok,false);
+ assert.equal(T.snsCheck({...base,ingredients:['소주','토닉워터']}).ok,false);
+});
+test('기준 미달 SNS 후보는 순위에서 빠지고, 단일 게시물 반응만 충족하면 외부 점수 0.8배',()=>{
+ const a={key:'a',platform:'instagram',sourceUrl:'https://www.instagram.com/p/a/',sourceDate:'2026-11-09',ingredients:['x','y'],accounts:3};
+ const b={key:'b',platform:'instagram',sourceUrl:'https://www.instagram.com/p/b/',sourceDate:'2026-11-09',ingredients:['x','y'],accounts:1,reactions:2000};
+ const bad={key:'bad',platform:'tiktok',sourceUrl:'https://www.tiktok.com/@a/1',sourceDate:'2026-11-09',ingredients:['x'],accounts:5};
+ const r=T.rankTrends([b,bad,a],now);
+ assert.deepEqual(r.map(x=>x.key),['a','b']);
+ assert.equal((r[1].trend.external/r[0].trend.external).toFixed(2),'0.80');
+ assert.equal(r[0].trend.label,'📸 SNS 화제');
+});

@@ -8,6 +8,14 @@
  *  T 트렌드 점수 = 0.6 × E + 0.4 × I
  *  갱신: 팀이 주 1회 외부 출처를 추가·확인(수동 큐레이션, 자동 수집 아님), 앱 반응은 요청 시마다 다시 계산
  *  누적 좋아요·누적 리뷰 수는 쓰지 않는다(과거 인기와 현재 유행을 섞지 않기 위해).
+ *
+ * SNS 후보 채택 기준 (인스타그램·유튜브 쇼츠·틱톡·블로그 공개 게시물, 팀이 직접 찾아 입력 → 아래 규칙으로 자동 판정)
+ *  ① 원문 확인: 공개 게시물 주소와 게시일이 있어야 한다
+ *  ② 확산: 서로 다른 계정 3곳 이상이 같은 조합을 올렸거나, 한 게시물 반응(좋아요+댓글) 1,000 이상(확인일 기록)
+ *  ③ 재현성: 게시물에서 재료·옵션이 2개 이상 확인돼야 한다
+ *  ④ 제외: 주류가 들어간 조합
+ *  - 하나라도 못 맞추면 트렌드 목록에 넣지 않는다. 판매 확인 여부와 광고·협찬 표기는 배지로 표시한다.
+ *  - SNS 외부 최신성 E에 확산 가중치를 곱한다: 3개 계정 이상 1.0, 단일 게시물 반응 기준만 충족 0.8
  */
 (function (root, factory) {
   const api = factory();
@@ -18,6 +26,30 @@
   const RECENT_DAYS = 120;
   const W_EXTERNAL = 0.6;
   const W_INAPP = 0.4;
+  const SNS_PLATFORMS = { instagram: '📸 인스타그램', youtube: '▶️ 유튜브', tiktok: '🎵 틱톡', blog: '📝 블로그' };
+  const MIN_ACCOUNTS = 3;
+  const MIN_REACTIONS = 1000;
+  const MIN_INGREDIENTS = 2;
+  const ALCOHOL = ['소주', '맥주', '와인', '하이볼', '막걸리', '위스키', '보드카', '사케', '칵테일'];
+
+  function isSns(item) { return !!SNS_PLATFORMS[String(item && item.platform || '')]; }
+
+  // SNS 후보가 채택 기준을 모두 맞추는지 판정한다. 기사·공식 자료는 이 판정을 거치지 않는다.
+  function snsCheck(item) {
+    const url = String(item.sourceUrl || '');
+    const accounts = Number(item.accounts) || 0;
+    const reactions = Number(item.reactions) || 0;
+    const ingredients = (item.ingredients || []).filter(x => String(x || '').trim());
+    const text = [item.name, ...ingredients].join(' ');
+    const checks = [
+      { key: 'source', label: '원문·게시일 확인', pass: /^https:\/\//.test(url) && daysBetween(item.sourceDate, new Date()) != null },
+      { key: 'spread', label: `확산(${MIN_ACCOUNTS}개 계정 이상 또는 반응 ${MIN_REACTIONS.toLocaleString()} 이상)`, pass: accounts >= MIN_ACCOUNTS || reactions >= MIN_REACTIONS },
+      { key: 'recipe', label: `재료·옵션 ${MIN_INGREDIENTS}개 이상 확인`, pass: ingredients.length >= MIN_INGREDIENTS },
+      { key: 'safe', label: '주류 미포함', pass: !ALCOHOL.some(w => text.includes(w)) }
+    ];
+    const spreadWeight = accounts >= MIN_ACCOUNTS ? 1 : (reactions >= MIN_REACTIONS ? 0.8 : 0);
+    return { ok: checks.every(c => c.pass), checks, spreadWeight };
+  }
 
   // 앱 전시 조합 중 출처 자료(보도일 확인)와 같은 조합인 항목. 출처: PICKFOO_실제조합_초기데이터/sources.csv
   const CURATED_SOURCES = {
@@ -50,24 +82,28 @@
 
   function trendScore(item, now = new Date()) {
     const e = externalScore(item.sourceDate, now);
+    const sns = isSns(item);
+    if (sns) e.value *= snsCheck(item).spreadWeight;
     const i = inAppScore(item.reviewers7d, item.avg7d);
     const total = W_EXTERNAL * e.value + W_INAPP * i;
     let label = '소개일 미확인';
     if (e.kind === 'recent' && i > 0) label = '🔥 외부 화제 + 앱 반응';
+    else if (e.kind === 'recent' && sns) label = '📸 SNS 화제';
     else if (e.kind === 'recent') label = '📰 최근 외부 소개';
     else if (i > 0) label = '👥 PICKFOO 반응';
     else if (e.kind === 'steady') label = '📚 스테디(과거 소개)';
     return { total, external: e.value, inApp: i, age: e.age, kind: e.kind, label };
   }
 
+  // SNS 후보 중 채택 기준을 못 맞춘 것은 순위에서 뺀다.
   function rankTrends(items, now = new Date()) {
-    return items.map((it, index) => ({ it, index, s: trendScore(it, now) }))
+    return items.filter(it => !isSns(it) || snsCheck(it).ok).map((it, index) => ({ it, index, s: trendScore(it, now) }))
       .sort((a, b) => b.s.total - a.s.total || (a.s.age ?? 1e9) - (b.s.age ?? 1e9) || a.index - b.index)
       .map(x => Object.assign({}, x.it, { trend: x.s }));
   }
 
-  return { HALF_LIFE_DAYS, RECENT_DAYS, W_EXTERNAL, W_INAPP, CURATED_SOURCES,
-           daysBetween, externalScore, inAppScore, trendScore, rankTrends };
+  return { HALF_LIFE_DAYS, RECENT_DAYS, W_EXTERNAL, W_INAPP, CURATED_SOURCES, SNS_PLATFORMS,
+           MIN_ACCOUNTS, MIN_REACTIONS, daysBetween, externalScore, inAppScore, isSns, snsCheck, trendScore, rankTrends };
 });
 
 /* ---------- 화면: 홈 '트렌드 조합' 패널 ---------- */
@@ -103,13 +139,15 @@
   sec.id = 'pfTrendPanel';
   sec.setAttribute('aria-label', '트렌드 조합');
   sec.innerHTML = `<h2>📈 트렌드 조합</h2>
-<p class="pt-desc">외부 기사·출처의 소개 날짜가 최근일수록, PICKFOO 안에서 최근 7일 평가가 많을수록 점수가 높아요. 오래전에 유명했던 조합은 '스테디'로 따로 보여줘요.</p>
+<p class="pt-desc">SNS·기사에 최근 올라온 조합일수록, PICKFOO 안에서 최근 7일 평가가 많을수록 점수가 높아요. 오래전에 유명했던 조합은 '스테디'로 따로 보여줘요.</p>
 <div class="pt-tabs" role="group" aria-label="트렌드 분류">
   <button type="button" class="pt-tab" data-k="recent" aria-pressed="true">지금 트렌드</button>
+  <button type="button" class="pt-tab" data-k="sns" aria-pressed="false">SNS 화제</button>
   <button type="button" class="pt-tab" data-k="steady" aria-pressed="false">스테디</button>
 </div>
 <div class="pt-list" aria-live="polite"></div>
-<p class="pt-policy">점수 = 0.6 × 외부 최신성(반감기 ${T.HALF_LIFE_DAYS}일, 소개 후 ${T.RECENT_DAYS}일 지나면 스테디로 이동) + 0.4 × 앱 반응(최근 7일 서로 다른 평가자 수·평균 별점). 외부 출처는 팀이 주 1회 확인해 추가하는 수동 큐레이션이며, 조회수·판매량·누적 좋아요는 쓰지 않아요.</p>`;
+<p class="pt-policy">점수 = 0.6 × 외부 최신성(반감기 ${T.HALF_LIFE_DAYS}일, 소개 후 ${T.RECENT_DAYS}일 지나면 스테디로 이동) + 0.4 × 앱 반응(최근 7일 서로 다른 평가자 수·평균 별점).<br>SNS 조합 채택 기준: ① 공개 게시물 주소·게시일 확인 ② 서로 다른 계정 ${T.MIN_ACCOUNTS}곳 이상이 올렸거나 한 게시물 반응 ${T.MIN_REACTIONS.toLocaleString()} 이상 ③ 재료·옵션 2개 이상 확인 ④ 주류 제외. 하나라도 못 맞추면 목록에서 빼요. 팀이 주 1회 SNS·기사를 직접 찾아 넣고(자동 수집 아님), 채택과 순위는 이 규칙으로 계산해요.</p>
+<p class="pt-policy pt-excluded"></p>`;
   const anchor = document.getElementById('pickfooTrending7d') || results;
   anchor.before(sec);
 
@@ -130,20 +168,29 @@
                sourceTitle: src.title || '', sourceUrl: src.url || '', reviewers7d: rv.n || 0, avg7d: rv.avg || 0 };
     });
     const fromSources = candidates.map(c => ({ key: c.id, name: c.name, brand: c.brand, inApp: false,
-      sourceDate: c.sourceDate, sourceTitle: c.sourceTitle, sourceUrl: c.sourceUrl, reviewers7d: 0, avg7d: 0 }));
+      sourceDate: c.sourceDate, sourceTitle: c.sourceTitle, sourceUrl: c.sourceUrl, reviewers7d: 0, avg7d: 0,
+      platform: c.platform || 'article', ingredients: c.ingredients || [], accounts: c.accounts || 0,
+      reactions: c.reactions || 0, observedAt: c.observedAt || null, sponsored: !!c.sponsored,
+      availability: c.availability || 'unverified' }));
     return fromApp.concat(fromSources);
   }
 
   function render() {
-    const ranked = T.rankTrends(items());
+    const all = items();
+    const ranked = T.rankTrends(all);
+    const excluded = all.filter(x => T.isSns(x) && !T.snsCheck(x).ok).length;
+    const exEl = sec.querySelector('.pt-excluded');
+    exEl.textContent = excluded ? `SNS 후보 중 채택 기준을 못 맞춘 ${excluded}개는 제외했어요.` : '';
     const shown = ranked.filter(x => mode === 'recent'
       ? (x.trend.kind === 'recent' || x.trend.inApp > 0)
-      : (x.trend.kind === 'steady' && x.trend.inApp === 0)).slice(0, 5);
+      : mode === 'sns' ? T.isSns(x)
+      : (x.trend.kind === 'steady' && x.trend.inApp === 0)).slice(0, mode === 'sns' ? 10 : 5);
     list.replaceChildren();
     if (!shown.length) {
       const p = document.createElement('p');
       p.style.cssText = 'margin:0;padding:10px 2px;font-size:13px;color:#685d55';
-      p.textContent = mode === 'recent' ? '최근 120일 안에 소개됐거나 이번 주 평가가 있는 조합이 아직 없어요.' : '스테디 조합이 없어요.';
+      p.textContent = mode === 'recent' ? '최근 120일 안에 소개됐거나 이번 주 평가가 있는 조합이 아직 없어요.'
+        : mode === 'sns' ? '채택 기준을 통과한 SNS 조합이 아직 없어요.' : '스테디 조합이 없어요.';
       list.appendChild(p);
       return;
     }
@@ -157,7 +204,18 @@
       const meta = document.createElement('div'); meta.className = 'pt-meta';
       const chip = document.createElement('span'); chip.className = 'pt-chip'; chip.textContent = x.trend.label;
       meta.appendChild(chip);
+      if (T.isSns(x)) {
+        const pc = document.createElement('span'); pc.className = 'pt-chip'; pc.textContent = T.SNS_PLATFORMS[x.platform];
+        meta.appendChild(pc);
+      }
       meta.append(` ${x.brand} · ${fmtAge(x.trend.age)} · 외부 ${x.trend.external.toFixed(1)} / 앱 반응 ${x.trend.inApp.toFixed(1)} `);
+      if (T.isSns(x)) {
+        const spread = [];
+        if (x.accounts) spread.push(`${x.accounts}개 계정`);
+        if (x.reactions) spread.push(`반응 ${Number(x.reactions).toLocaleString()}${x.observedAt ? ` (${x.observedAt} 확인)` : ''}`);
+        if (spread.length) meta.append(spread.join(' · ') + ' ');
+        if (x.sponsored) { const ad = document.createElement('span'); ad.className = 'pt-chip'; ad.textContent = '광고·협찬 표기'; meta.appendChild(ad); }
+      }
       if (x.sourceUrl) {
         const a = document.createElement('a'); a.href = x.sourceUrl; a.target = '_blank'; a.rel = 'noopener noreferrer';
         a.textContent = (x.sourceTitle || '출처') + ' ↗'; meta.appendChild(a);
@@ -171,7 +229,7 @@
         meta.appendChild(b);
       } else {
         const c2 = document.createElement('span'); c2.className = 'pt-chip'; c2.style.marginLeft = '4px';
-        c2.textContent = '가격·판매 확인 전 후보'; meta.appendChild(c2);
+        c2.textContent = x.availability === 'confirmed' ? '재료 판매 확인됨' : '가격·판매 확인 전 후보'; meta.appendChild(c2);
       }
       row.append(rank, name, score, meta);
       list.appendChild(row);

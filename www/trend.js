@@ -97,7 +97,7 @@
 
   // 자동 수집 신호(네이버 블로그·유튜브)를 항목에 덧씌운다. 채택 기준을 통과할 때만 SNS 항목으로 바꾸고,
   // 통과하지 못하면 원래 출처(기사 등)를 유지한 채 수집 결과만 메모로 남긴다.
-  const SIGNAL_SOURCES = { naver_blog: { platform: 'blog', label: '네이버 블로그' }, youtube: { platform: 'youtube', label: '유튜브' } };
+  const SIGNAL_SOURCES = { kakao_blog: { platform: 'blog', label: '다음 블로그 검색' }, naver_blog: { platform: 'blog', label: '네이버 블로그' }, youtube: { platform: 'youtube', label: '유튜브' } };
   function applySignal(item, signal, collectedAt) {
     if (!signal) return item;
     let best = null;
@@ -210,9 +210,9 @@
     exEl.textContent = excluded ? `SNS 후보 중 채택 기준을 못 맞춘 ${excluded}개는 제외했어요.` : '';
     const col = sec.querySelector('.pt-collect');
     if (signals && signals.collectedAt) {
-      const names = (signals.sources || []).map(s => s === 'naver_blog' ? '네이버 블로그' : s === 'youtube' ? '유튜브' : s).join('·');
+      const names = (signals.sources || []).map(s => ({ kakao_blog: '다음(카카오) 블로그', naver_blog: '네이버 블로그', youtube: '유튜브' })[s] || s).join('·');
       col.textContent = `자동 수집: ${names} 공식 검색 API, 마지막 수집 ${signals.collectedAt.slice(0, 16).replace('T', ' ')} (24시간마다 갱신)`;
-    } else if (signals && signals.configured && !signals.configured.naver && !signals.configured.youtube) {
+    } else if (signals && signals.configured && !Object.values(signals.configured).some(Boolean)) {
       col.textContent = '자동 수집: 검색 API 키가 설정되지 않아 아직 수집하지 않았어요.';
     } else if (signals && signals.refreshing) {
       col.textContent = '자동 수집: 지금 수집 중이에요. 잠시 후 새로고침하세요.';

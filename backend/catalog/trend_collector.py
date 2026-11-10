@@ -1,7 +1,10 @@
 """PICKFOO 트렌드 자동 수집기.
 
 공식 검색 API만 사용한다(약관상 스크래핑이 금지된 인스타그램·틱톡은 수집하지 않는다).
+  - 카카오(Daum) 검색 API: 블로그 (환경변수 KAKAO_REST_API_KEY) — 카드 등록 없이 발급
   - 네이버 검색 API: 블로그 (환경변수 NAVER_CLIENT_ID, NAVER_CLIENT_SECRET)
+      2026-07-31부터 신규 발급은 NAVER API HUB(네이버 클라우드)에서만 가능해 HUB 주소를 기본으로 쓴다.
+      예전 Developers Center 키라면 NAVER_API_LEGACY=1
   - YouTube Data API v3: 동영상·쇼츠 (환경변수 YOUTUBE_API_KEY)
 
 조합마다 최근 게시물을 검색해, 제목·요약에 조합 이름의 단어가 모두 들어간 게시물만 센다.
@@ -68,9 +71,25 @@ _refresh_lock = threading.Lock()
 
 def configured() -> dict:
     return {
+        'kakao': bool(os.getenv('KAKAO_REST_API_KEY')),
         'naver': bool(os.getenv('NAVER_CLIENT_ID') and os.getenv('NAVER_CLIENT_SECRET')),
         'youtube': bool(os.getenv('YOUTUBE_API_KEY')),
     }
+
+
+def blog_root(url: str) -> str:
+    """게시물 주소에서 블로그 단위(작성자)를 뽑는다. 같은 블로그의 여러 글은 한 명으로 센다."""
+    try:
+        u = urllib.parse.urlsplit(url or '')
+    except ValueError:
+        return ''
+    host = (u.hostname or '').lower().removeprefix('m.')
+    parts = [p for p in u.path.split('/') if p]
+    if host in ('blog.naver.com', 'brunch.co.kr', 'velog.io') and parts:
+        return f'{host}/{parts[0]}'
+    if host == 'blog.daum.net' and parts:
+        return f'{host}/{parts[0]}'
+    return host
 
 
 def _norm(text: str) -> str:
@@ -110,11 +129,33 @@ def _get_json(url: str, headers: dict | None = None) -> dict:
         return json.loads(resp.read().decode('utf-8'))
 
 
+def fetch_kakao_blog(query: str) -> list[dict]:
+    url = 'https://dapi.kakao.com/v2/search/blog?' + urllib.parse.urlencode(
+        {'query': query, 'sort': 'recency', 'size': 50, 'page': 1})
+    data = _get_json(url, {'Authorization': 'KakaoAK ' + os.getenv('KAKAO_REST_API_KEY', '')})
+    posts = []
+    for it in data.get('documents', []):
+        date = str(it.get('datetime') or '')[:10]
+        link = it.get('url', '')
+        if not re.fullmatch(r'\d{4}-\d{2}-\d{2}', date) or not link:
+            continue
+        posts.append({'title': re.sub(r'<[^>]+>', '', html.unescape(it.get('title', ''))),
+                      'summary': it.get('contents', ''), 'url': link,
+                      'author': blog_root(link) or it.get('blogname', ''), 'date': date})
+    return posts
+
+
 def fetch_naver_blog(query: str) -> list[dict]:
-    url = 'https://openapi.naver.com/v1/search/blog.json?' + urllib.parse.urlencode(
-        {'query': query, 'display': 100, 'sort': 'date'})
-    data = _get_json(url, {'X-Naver-Client-Id': os.getenv('NAVER_CLIENT_ID', ''),
-                           'X-Naver-Client-Secret': os.getenv('NAVER_CLIENT_SECRET', '')})
+    params = urllib.parse.urlencode({'query': query, 'display': 100, 'sort': 'date'})
+    if os.getenv('NAVER_API_LEGACY', '').strip() in ('1', 'true', 'yes'):
+        url = 'https://openapi.naver.com/v1/search/blog.json?' + params
+        headers = {'X-Naver-Client-Id': os.getenv('NAVER_CLIENT_ID', ''),
+                   'X-Naver-Client-Secret': os.getenv('NAVER_CLIENT_SECRET', '')}
+    else:  # NAVER API HUB (2026-06 공개, 신규 발급은 여기서만)
+        url = 'https://naverapihub.apigw.ntruss.com/search/v1/blog?' + params
+        headers = {'X-NCP-APIGW-API-KEY-ID': os.getenv('NAVER_CLIENT_ID', ''),
+                   'X-NCP-APIGW-API-KEY': os.getenv('NAVER_CLIENT_SECRET', '')}
+    data = _get_json(url, headers)
     posts = []
     for it in data.get('items', []):
         d = str(it.get('postdate') or '')
@@ -177,6 +218,7 @@ def collect(now: datetime | None = None, fetchers: dict | None = None) -> dict:
     conf = configured()
     fetchers = fetchers or {}
     use = {
+        'kakao_blog': fetchers.get('kakao_blog') or (fetch_kakao_blog if conf['kakao'] else None),
         'naver_blog': fetchers.get('naver_blog') or (fetch_naver_blog if conf['naver'] else None),
         'youtube': fetchers.get('youtube') or ((lambda q: fetch_youtube(q, now)) if conf['youtube'] else None),
     }

@@ -40,7 +40,7 @@ class TrendCollectorTests(TestCase):
 
     def test_collect_saves_file_and_api_returns_it_without_refetch(self):
         fake_blog = lambda q: [post('a', 1, title=q), post('b', 5, title=q), post('c', 9, title=q)]
-        with mock.patch.dict('os.environ', {'NAVER_CLIENT_ID': '', 'NAVER_CLIENT_SECRET': '', 'YOUTUBE_API_KEY': ''}):
+        with mock.patch.dict('os.environ', {'KAKAO_REST_API_KEY': '', 'NAVER_CLIENT_ID': '', 'NAVER_CLIENT_SECRET': '', 'YOUTUBE_API_KEY': ''}):
             result = tc.collect(now=NOW, fetchers={'naver_blog': fake_blog})
         self.assertIn('pf-curated-02', result['items'])
         self.assertEqual(result['items']['pf-curated-02']['naver_blog']['authors30'], 3)
@@ -50,9 +50,9 @@ class TrendCollectorTests(TestCase):
         self.assertFalse(body['refreshing'])
 
     def test_api_without_keys_does_not_start_collection(self):
-        with mock.patch.dict('os.environ', {'NAVER_CLIENT_ID': '', 'NAVER_CLIENT_SECRET': '', 'YOUTUBE_API_KEY': ''}):
+        with mock.patch.dict('os.environ', {'KAKAO_REST_API_KEY': '', 'NAVER_CLIENT_ID': '', 'NAVER_CLIENT_SECRET': '', 'YOUTUBE_API_KEY': ''}):
             body = self.client.get('/api/catalog/trend-signals/').json()
-        self.assertEqual(body['configured'], {'naver': False, 'youtube': False})
+        self.assertEqual(body['configured'], {'kakao': False, 'naver': False, 'youtube': False})
         self.assertFalse(body['refreshing'])
         self.assertEqual(body['items'], {})
 
@@ -69,3 +69,28 @@ class TrendCollectorTests(TestCase):
         old = {'collectedAt': (NOW - timedelta(hours=30)).isoformat()}
         self.assertFalse(tc.is_stale(fresh, NOW))
         self.assertTrue(tc.is_stale(old, NOW))
+
+    def test_blog_root_counts_one_blog_once(self):
+        self.assertEqual(tc.blog_root('https://blog.naver.com/abc/223'), 'blog.naver.com/abc')
+        self.assertEqual(tc.blog_root('https://m.blog.naver.com/abc/999'), 'blog.naver.com/abc')
+        self.assertEqual(tc.blog_root('https://foo.tistory.com/12'), 'foo.tistory.com')
+        self.assertEqual(tc.blog_root('https://brunch.co.kr/@me/3'), 'brunch.co.kr/@me')
+
+    def test_kakao_response_is_parsed_with_blog_as_author(self):
+        fake = {'documents': [
+            {'title': '<b>불닭</b> 콘치즈', 'contents': '', 'url': 'https://a.tistory.com/1', 'blogname': 'A', 'datetime': '2026-11-08T10:00:00.000+09:00'},
+            {'title': '불닭 콘치즈 2', 'contents': '', 'url': 'https://a.tistory.com/2', 'blogname': 'A', 'datetime': '2026-11-07T10:00:00.000+09:00'},
+            {'title': '불닭 콘치즈', 'contents': '', 'url': 'https://blog.naver.com/b/9', 'blogname': 'B', 'datetime': '2026-11-06T10:00:00.000+09:00'}]}
+        with mock.patch.object(tc, '_get_json', return_value=fake) as get:
+            posts = tc.fetch_kakao_blog('불닭 콘치즈')
+        self.assertIn('KakaoAK', get.call_args[0][1]['Authorization'])
+        self.assertEqual([p['author'] for p in posts], ['a.tistory.com', 'a.tistory.com', 'blog.naver.com/b'])
+        self.assertEqual(tc.summarize('불닭 콘치즈', posts, NOW)['authors30'], 2)
+
+    def test_naver_uses_api_hub_by_default(self):
+        with mock.patch.object(tc, '_get_json', return_value={'items': []}) as get, \
+             mock.patch.dict('os.environ', {'NAVER_API_LEGACY': '', 'NAVER_CLIENT_ID': 'id', 'NAVER_CLIENT_SECRET': 'x'}):
+            tc.fetch_naver_blog('아샷추')
+        url, headers = get.call_args[0]
+        self.assertTrue(url.startswith('https://naverapihub.apigw.ntruss.com/search/v1/blog?'))
+        self.assertIn('X-NCP-APIGW-API-KEY-ID', headers)

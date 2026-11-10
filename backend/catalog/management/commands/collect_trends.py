@@ -13,14 +13,14 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         conf = trend_collector.configured()
         if not any(conf.values()):
-            self.stderr.write('API 키가 없습니다. NAVER_CLIENT_ID/NAVER_CLIENT_SECRET 또는 YOUTUBE_API_KEY를 설정하세요.')
+            self.stderr.write('API 키가 없습니다. KAKAO_REST_API_KEY, NAVER_CLIENT_ID/NAVER_CLIENT_SECRET, YOUTUBE_API_KEY 중 하나 이상을 설정하세요.')
             return
         result = trend_collector.collect()
         items = result['items']
         self.stdout.write(f"수집 완료 {result['collectedAt']} · 출처 {', '.join(result['sources'])} · 신호 있는 조합 {len(items)}개")
         for key, row in sorted(items.items()):
             parts = []
-            for src in ('naver_blog', 'youtube'):
+            for src in ('kakao_blog', 'naver_blog', 'youtube'):
                 if src in row:
                     s = row[src]
                     parts.append(f"{src} 30일 {s['authors30']}명/120일 {s['authors120']}명 최신 {s['latest']}")

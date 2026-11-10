@@ -49,3 +49,14 @@ test('자동 수집 신호는 최근 30일 작성자 3명 이상일 때만 SNS �
  assert.equal(w.platform,undefined);assert.equal(w.sourceDate,'2020-01-01');assert.match(w.signalNote,/2명/);
  assert.equal(T.applySignal(item,null),item);
 });
+
+test('원문 예시 제목에 조합 이름이 없으면 SNS 화제로 채택하지 않는다', () => {
+  const T = require('../www/trend.js');
+  const base = { id: 'x', title: '돼지바 프라푸치노', sourceDate: '2020-06-28', ingredients: ['자바칩 프라푸치노', '딸기 시럽', '초콜릿 칩'] };
+  const sig = { kakao_blog: { authors30: 5, authors120: 19, latest: '2026-11-09', samples: [{ url: 'https://a.example/1', title: '논산 빵집', titleMatch: false }] } };
+  const out = T.applySignal(base, sig, '2026-11-10T18:00:00+09:00');
+  assert.equal(out.autoCollected, undefined);
+  assert.match(out.signalNote, /제목 일치 원문 없음/);
+  const ok = { kakao_blog: Object.assign({}, sig.kakao_blog, { samples: [{ url: 'https://b.example/1', title: '돼지바 프라푸치노 후기', titleMatch: true }] }) };
+  assert.equal(T.applySignal(base, ok, '2026-11-10T18:00:00+09:00').autoCollected, true);
+});

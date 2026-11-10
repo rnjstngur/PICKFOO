@@ -114,6 +114,10 @@
       sourceUrl: sample.url || '', sourceTitle: `${meta.label} 최근 30일 ${best.s.authors30}명 · 120일 ${best.s.authors120}명`,
       observedAt: String(collectedAt || '').slice(0, 10), autoCollected: true
     });
+    // 원문 링크가 실제로 그 조합 글(제목에 조합 이름)일 때만 SNS 화제로 채택한다. titleMatch가 없는 예전 수집분은 그대로 둔다.
+    if (sample.titleMatch === false) {
+      return Object.assign({}, item, { signalNote: `${meta.label} 최근 30일 ${best.s.authors30}명 언급(제목 일치 원문 없음)` });
+    }
     if (snsCheck(overlay).ok) return overlay;
     return Object.assign({}, item, { signalNote: `${meta.label} 최근 30일 ${best.s.authors30}명(기준 ${MIN_ACCOUNTS}명 미만)` });
   }

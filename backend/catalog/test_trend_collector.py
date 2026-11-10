@@ -105,3 +105,14 @@ class TrendCollectorTests(TestCase):
         url, headers = get.call_args[0]
         self.assertTrue(url.startswith('https://naverapihub.apigw.ntruss.com/search/v1/blog?'))
         self.assertIn('X-NCP-APIGW-API-KEY-ID', headers)
+
+    def test_samples_put_title_matches_first(self):
+        posts = [
+            {'title': '논산 빵집 후기', 'summary': '돼지바 프라푸치노 맛있음', 'url': 'https://a.example/1', 'author': 'a', 'date': post('a', 1)['date']},
+            {'title': '돼지바 프라푸치노 후기', 'summary': '', 'url': 'https://b.example/1', 'author': 'b', 'date': post('b', 5)['date']},
+        ]
+        s = tc.summarize('돼지바 프라푸치노', posts, NOW)
+        self.assertEqual(s['authors30'], 2)
+        self.assertEqual(s['samples'][0]['url'], 'https://b.example/1')
+        self.assertTrue(s['samples'][0]['titleMatch'])
+        self.assertFalse(s['samples'][1]['titleMatch'])

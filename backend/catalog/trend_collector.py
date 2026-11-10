@@ -214,12 +214,18 @@ def summarize(query: str, posts: list[dict], now: datetime) -> dict | None:
     if not rel:
         return None
     rel.sort(key=lambda p: p['age'])
+    # 원문 예시는 제목에 조합 이름이 들어간 글을 먼저 보여준다(본문에만 언급된 카페·맛집 글은 뒤로).
+    toks = [t.replace(' ', '') for t in tokens_for(query)]
+    def title_hit(p):
+        head = _norm(p['title'])
+        return all(t in head for t in toks)
+    samples = sorted(rel, key=lambda p: (not title_hit(p), p['age']))[:SAMPLE_COUNT]
     return {
         'authors30': len({p['author'] for p in rel if p['age'] <= SPREAD_DAYS}),
         'authors120': len({p['author'] for p in rel}),
         'posts120': len(rel),
         'latest': rel[0]['date'],
-        'samples': [{'title': p['title'][:120], 'url': p['url'], 'date': p['date']} for p in rel[:SAMPLE_COUNT]],
+        'samples': [{'title': p['title'][:120], 'url': p['url'], 'date': p['date'], 'titleMatch': title_hit(p)} for p in samples],
     }
 
 
@@ -277,8 +283,9 @@ def load() -> dict | None:
 
 
 # 관련 글 판정 규칙이 바뀌면 올린다. 저장된 결과의 버전이 다르면 24시간이 안 지나도 다시 수집한다.
-# 1: 제목+요약에 단어가 모두 있으면 인정 / 2: 제목, 또는 요약에 붙은 표현만 인정 / 3: 한 단어 조합은 제목만 (2026-11-10)
-RULE_VERSION = 3
+# 1: 제목+요약에 단어가 모두 있으면 인정 / 2: 제목, 또는 요약에 붙은 표현만 인정 / 3: 한 단어 조합은 제목만
+# 4: 원문 예시를 제목 일치 글 먼저 (2026-11-10)
+RULE_VERSION = 4
 
 
 def is_stale(result: dict | None, now: datetime | None = None) -> bool:

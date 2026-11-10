@@ -23,7 +23,7 @@
   <div class="filter-row"><select id="budgetFilter" aria-label="가격대 설정"><option value="all">가격대 설정</option><option value="5000">5,000원 이하</option><option value="7000">7,000원 이하</option><option value="10000">10,000원 이하</option></select><select id="spicyFilter" aria-label="매운 단계"><option value="all">매운 단계</option><option value="0">안 매움</option><option value="1">약간 매움</option><option value="2">매움</option></select><button id="excludeBtn" class="pill">땅콩·갑각류 제외 <span>⌄</span></button></div>
   <section class="category-section"><div class="section-heading"><div><h2>브랜드</h2><p>브랜드별 전시 추천 조합 둘러보기</p></div><span class="subtle" id="brandCount">브랜드 선택됨</span></div><div class="category-grid" id="brandCategories"></div></section>
   <section class="category-section"><div class="section-heading"><div><h2>음식 카테고리</h2><p>먹고 싶은 종류로 찾아보기</p></div><span class="subtle">카테고리 선택</span></div><div class="category-grid food-grid" id="foodCategories"></div></section>
-  <button class="verified-toggle off" id="verifiedToggle"><span class="checkmark">✓</span><span><b>팀 선정 전시 추천 조합만 보기</b><small>전시용 선정 조합만 표시 (검증 배지 아님)</small></span><span class="verified-stat">PICKFOO 전시 추천 20개</span><span class="toggle-track" id="toggleTrack"></span></button>
+  <button class="verified-toggle off" id="verifiedToggle"><span class="checkmark">✓</span><span><b>검증된 메뉴만 보기</b><small>실제 사용자 평가 기준을 충족한 조합만 표시</small></span><span class="verified-stat">PICKFOO 내부 검증</span><span class="toggle-track" id="toggleTrack"></span></button>
   <section class="results-section"><div class="section-heading"><div><h2 id="resultsTitle">추천 조합</h2><p id="resultsSubtitle">조건에 맞는 추천 조합</p></div><label class="sort-control">정렬 <select id="sortMode" aria-label="추천 정렬 방식"><option value="default">기본 순서</option><option value="personalized">내 취향 우선 (규칙)</option></select></label><button class="text-btn" id="resetFilters">초기화</button></div><div id="recipeGrid" class="recipe-grid"></div><div id="emptyState" class="empty-state hidden">조건에 맞는 조합이 없어요.<br>필터를 바꾸거나 다른 카테고리를 선택해 보세요.</div></section>
   <div class="bottom-actions"><button class="primary-btn" id="uploadComboBtn">＋ 나만의 조합 등록</button><button class="secondary-btn" id="pointsBtn">P 포인트 상점</button></div>
 </section>
@@ -44,39 +44,7 @@
 <script src="recommendation-score-ui.js"></script>
 <script src="session-db.js"></script>
 <script src="main-profile-db.js"></script>
-<!-- PICKFOO DB 메뉴 조회 버튼 -->
-<a
-    href="catalog.html"
-    class="catalog-shortcut"
-    aria-label="데이터베이스 음식 메뉴 보기"
->
-    🍱 DB 메뉴 보기
-</a>
-
-<style>
-    .catalog-shortcut {
-        position: fixed;
-        right: 16px;
-        bottom: 90px;
-        z-index: 999;
-
-        padding: 12px 16px;
-        border-radius: 25px;
-
-        background: #ff7448;
-        color: white;
-
-        font-size: 14px;
-        font-weight: bold;
-        text-decoration: none;
-
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .catalog-shortcut:hover {
-        background: #ed6038;
-    }
-</style><script src="db-review-bridge.js?v=203"></script>
+<script src="db-review-bridge.js?v=203"></script>
 <script src="db-points-bridge.js?v=203"></script>
 <script src="shop-search-helper.js?v=203"></script>
 <script src="pickfoo-splash.js"></script>

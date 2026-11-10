@@ -33,8 +33,22 @@
       const host = u.hostname.toLowerCase();
       return row.provider === 'pocketcu'
         ? (host === 'pocketcu.co.kr' || host.endsWith('.pocketcu.co.kr'))
-        : (host === 'abr.ge' || host === 'gsretail.com' || host.endsWith('.gsretail.com'));
+        : (host === 'abr.ge' || host === 'ourgs.abr.ge' || host === 'gsretail.com' || host.endsWith('.gsretail.com'));
     } catch (_) { return false; }
+  }
+
+  // 우리동네GS 앱(com.gsr.gs25)은 https://ourgs.abr.ge 를 검증된 앱 링크로 등록해 두어
+  // 이 주소는 브라우저를 거치지 않고 앱이 바로 열린다(2026-11-10 Android 에뮬레이터 확인).
+  // 공유 단축주소 https://abr.ge/코드 는 크롬을 거쳐 이동하므로 같은 코드로 ourgs.abr.ge 주소를 만든다.
+  function appOpenUrl(row) {
+    try {
+      const u = new URL(row.url);
+      if (row.provider !== 'pocketcu' && u.hostname.toLowerCase() === 'abr.ge') {
+        u.hostname = 'ourgs.abr.ge';
+        return u.toString();
+      }
+    } catch (_) { /* 원래 주소 사용 */ }
+    return row.url;
   }
 
   function oneIngredientRow(name, matches) {
@@ -55,7 +69,7 @@
     for (const p of valid) {
       const link = element('a', `🛒 ${p.provider === 'pocketcu' ? '포켓CU' : '우리동네GS'} · ${p.product_name} ↗`,
           'display:block;box-sizing:border-box;width:100%;padding:10px 12px;margin:7px 0;border-radius:9px;color:white;text-decoration:none;word-break:break-word;font-size:13px;font-weight:650;background:' + (p.provider === 'pocketcu' ? '#178b4a' : '#1c68b5') + ';');
-      link.href = p.url;
+      link.href = appOpenUrl(p);
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
       row.appendChild(link);

@@ -17,22 +17,24 @@
   // 실제 기기·에뮬레이터에서 동작을 확인한 주문 경로만 둔다(2026-11-09 확인).
   // 쿠팡이츠·요기요·포켓CU·우리동네GS는 검색 화면으로 가지 않거나 앱 대신 웹사이트가 열려 제외했다.
   const CH = {
-    baemin: { name: '배달의민족에서 주문하기', icon: '🛵', url: 'https://www.baemin.com/' }
+    baemin: { name: '배민', icon: '🛵', url: 'https://www.baemin.com/' }
   };
 
   // 브랜드별 배민 검색어. 지점은 배민이 사용자 주소로 자동 선택한다. 메뉴가 늘어나도 링크를 추가할 필요 없다.
   function channelsFor(recipe) {
     const brand = String(recipe.brand || '');
     if (brand.startsWith('편의점') || ['CU', 'GS25', '세븐일레븐'].includes(brand)) {
-      return { keyword: brand === 'GS25' ? 'GS25' : 'CU', note: '배민의 편의점 배달에서 재료가 모두 있는 한 지점을 고르면 배달비를 한 번만 내요.', list: ['baemin'] };
+      return { keyword: brand === 'GS25' ? 'GS25' : 'CU', convenience: true,
+               intro: '재료를 집까지 한 번에 배달받고 싶다면 배민에서 근처 편의점을 찾아 주문하세요. 직접 사러 가거나 편의점 앱으로 사려면 맨 아래 "편의점 앱에서 재료 사기"를 이용하세요.',
+               list: ['baemin'] };
     }
     if (brand === '스타벅스') {
-      return { keyword: '스타벅스', note: '음료 옵션(샷·시럽·드리즐·휘핑)은 메뉴를 고른 뒤 옵션 화면에서 아래 목록대로 선택하세요. 지역에 따라 배달이 안 될 수 있어요.', list: ['baemin'] };
+      return { keyword: '스타벅스', intro: '배민에서 가까운 스타벅스를 찾아 음료를 고른 뒤, 옵션(샷·시럽·드리즐·휘핑)을 아래 체크리스트대로 고르세요. 지역에 따라 배달이 안 될 수 있어요.', list: ['baemin'] };
     }
     if (brand === '써브웨이' || brand === '서브웨이') {
-      return { keyword: '써브웨이', note: '빵·소스·추가 토핑은 메뉴 옵션에서 아래 목록대로 선택하세요.', list: ['baemin'] };
+      return { keyword: '써브웨이', intro: '배민에서 가까운 써브웨이를 찾아 메뉴를 고른 뒤, 빵·소스·토핑을 아래 체크리스트대로 고르세요.', list: ['baemin'] };
     }
-    return { keyword: brand, note: '배민에서 브랜드를 검색하면 내 주소 기준 가까운 지점이 나와요.', list: ['baemin'] };
+    return { keyword: brand, intro: `배민에서 가까운 ${brand} 매장을 찾아 메뉴를 고른 뒤, 아래 체크리스트대로 담으세요.`, list: ['baemin'] };
   }
 
   const STORE_KEY = 'pickfoo_order_plan_v1';
@@ -54,6 +56,8 @@
     s.id = 'pf-order-style';
     s.textContent = `
 .pf-order{margin-top:4px}
+.pf-order .pf-sub{font-size:15px;margin:16px 0 2px;color:#3d3027}
+.pf-order .pf-hint{font-size:12px;color:#5a4332;background:#f6f1ea;border-radius:8px;padding:8px 10px;margin:8px 0 0;line-height:1.55}
 .pf-order .pf-note{font-size:12px;color:#6f6157;line-height:1.6;margin:6px 0 10px}
 .pf-order .pf-channels{display:grid;grid-template-columns:1fr;gap:8px}
 .pf-order .pf-ch{display:flex;gap:8px;align-items:center;justify-content:center;padding:14px 12px;font-size:15px !important;border-radius:10px;border:1px solid #e7d9c9;background:#fff;color:#3d3027;font-weight:700;font-size:13px;cursor:pointer;text-align:left}
@@ -101,25 +105,27 @@
     sec.id = 'pf-order-plan';
     sec.dataset.recipe = recipe.id;
     sec.appendChild(el('h3', null, '🛒 이 조합 구매하기'));
-    sec.appendChild(el('p', 'pf-note', `① 버튼을 누르면 "${plan.keyword}" 검색어가 복사되고 배민 검색 화면이 열려요. 검색창을 길게 눌러 붙여넣으면 내 주소 기준 가까운 지점이 나와요. ${plan.note}`));
+    sec.appendChild(el('p', 'pf-note', plan.intro));
 
     const chWrap = el('div', 'pf-channels');
     plan.list.forEach((id, i) => {
-      const b = el('button', 'pf-ch' + (i === 0 ? ' primary' : ''), `${CH[id].icon} ${CH[id].name}`);
+      const b = el('button', 'pf-ch' + (i === 0 ? ' primary' : ''), `${CH[id].icon} ${CH[id].name}에서 근처 ${plan.keyword} 찾기`);
       b.type = 'button';
       b.addEventListener('click', async () => {
         const ok = await copy(plan.keyword);
         const a = load(); const cur = a[recipe.id] || st;
         cur.startedAt = cur.startedAt || Date.now(); cur.channel = id;
         a[recipe.id] = cur; save(a);
-        if (!ok) b.textContent = `${CH[id].icon} 배민에서 "${plan.keyword}" 검색 후 주문`;
+        b.textContent = ok ? `✅ "${plan.keyword}" 복사됨 · 배민 여는 중…` : `${CH[id].icon} 배민에서 "${plan.keyword}"를 검색하세요`;
         openChannel(id, plan.keyword);
       });
       chWrap.appendChild(b);
     });
     sec.appendChild(chWrap);
+    sec.appendChild(el('p', 'pf-hint', `💡 배민이 열리면 검색창을 길게 눌러 "붙여넣기"를 누르세요. "${plan.keyword}"가 입력돼 내 주소 근처 매장이 나와요.`));
 
-    sec.appendChild(el('p', 'pf-note', '② 앱에서 아래 목록대로 담고 체크하세요. 옵션(빵·소스·샷 등)도 하나씩 확인돼요.'));
+    sec.appendChild(el('h4', 'pf-sub', '✅ 담을 것 체크리스트'));
+    sec.appendChild(el('p', 'pf-note', '장바구니에 담은 것을 하나씩 체크하면 빠뜨리지 않아요.'));
     const ul = el('ul', 'pf-list');
     (recipe.ingredients || []).forEach(name => {
       const li = el('li'); const lb = el('label'); const cb = el('input');
@@ -129,7 +135,8 @@
     });
     sec.appendChild(ul);
 
-    sec.appendChild(el('p', 'pf-note', '③ 배달앱에 표시된 금액을 입력하면 실제 결제 예상액과 예산 초과 여부를 계산해요. 처음 값은 PICKFOO 예상가예요.'));
+    sec.appendChild(el('h4', 'pf-sub', '💰 결제 금액 확인 (선택)'));
+    sec.appendChild(el('p', 'pf-note', '배민에 나온 금액을 넣으면 배달비를 더한 금액과 내 예산을 넘는지 알려줘요. 처음 값은 PICKFOO 예상가예요.'));
     const cost = el('div', 'pf-cost');
     function field(label, key, value) {
       const l = el('label', null, label); const inp = el('input');
@@ -165,7 +172,7 @@
     }
     calc();
 
-    const done = el('button', 'pf-done', '④ 주문 완료했어요');
+    const done = el('button', 'pf-done', '주문 완료했어요');
     done.type = 'button';
     const log = el('div', 'pf-log');
     function renderLog() {
@@ -190,7 +197,7 @@
     });
     sec.append(done, log);
     renderLog();
-    sec.appendChild(el('p', 'pf-note', '장바구니 담기·결제는 배민 앱에서 직접 진행돼요. 배민이 외부 앱의 자동 담기 기능을 공개하지 않아 제공하지 않아요. 편의점 재료를 하나씩 사려면 아래 재료별 상품 링크를 이용하세요.'));
+    sec.appendChild(el('p', 'pf-note', '담기와 결제는 배민 앱에서 직접 해요. 배민은 다른 앱이 장바구니에 대신 담는 기능을 열어 두지 않았어요.'));
     return sec;
   }
 
@@ -220,10 +227,6 @@
     if (existing && existing.dataset.recipe === recipe.id) return;
     if (existing) existing.remove();
     shopSection.prepend(render(recipe));
-    if (!convenience) {
-      const note = shopSection.querySelector('#pf-order-plan .pf-note:last-of-type');
-      if (note) note.textContent = '장바구니 담기·결제는 배민 앱에서 직접 진행돼요. 배민이 외부 앱의 자동 담기 기능을 공개하지 않아 제공하지 않아요. 옵션은 메뉴를 고른 뒤 옵션 화면에서 위 목록대로 선택하세요.';
-    }
   }
   new MutationObserver(attach).observe(detail, { childList: true, subtree: true });
   attach();

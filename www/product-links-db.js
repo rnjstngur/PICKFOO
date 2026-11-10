@@ -14,17 +14,6 @@
     return el;
   }
 
-  async function copyIngredient(name, button) {
-    try {
-      if (!navigator.clipboard || !navigator.clipboard.writeText) throw new Error('clipboard unavailable');
-      await navigator.clipboard.writeText(name);
-      button.textContent = '✅ 재료명 복사 완료';
-    } catch (error) {
-      // Some Android WebViews do not expose Clipboard API: allow manual copying.
-      window.prompt('재료명을 길게 눌러 복사하세요.', name);
-    }
-  }
-
   function safeProductLink(row) {
     if (!row || !PROVIDERS.has(row.provider)) return false;
     try {
@@ -51,23 +40,55 @@
     return row.url;
   }
 
+  // 등록된 상품 링크가 없는 재료도 편의점 앱까지는 바로 연결한다.
+  // Android 앱(MainActivity)은 www.gsretail.com → 우리동네GS(com.gsr.gs25),
+  // cu.bgfretail.com → 포켓CU(com.bgfcu.membership) 앱 실행으로 바꾸고, 앱이 없으면 웹사이트를 연다.
+  // 두 앱 모두 외부에서 검색어를 넘기는 공개 주소가 없어 재료명을 복사해 두고 앱 검색창에 붙여넣게 한다.
+  const STORE_APPS = {
+    gs25: { label: '우리동네GS', url: 'https://www.gsretail.com/', color: '#1c68b5' },
+    pocketcu: { label: '포켓CU', url: 'https://cu.bgfretail.com/', color: '#178b4a' }
+  };
+
+  function providersForRecipe() {
+    const app = window.PICKFOO_APP;
+    const id = app && app.selected && app.selected();
+    const r = id && app.recipe ? app.recipe(id) : null;
+    const brand = String((r && r.brand) || '');
+    if (brand === 'GS25') return ['gs25'];
+    if (brand === 'CU') return ['pocketcu'];
+    return ['gs25', 'pocketcu'];
+  }
+
+  function isNativeApp() {
+    return !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+  }
+
+  async function openStoreSearch(name, provider, button) {
+    const app = STORE_APPS[provider];
+    let copied = false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) { await navigator.clipboard.writeText(name); copied = true; }
+    } catch (_) { copied = false; }
+    button.textContent = copied ? `✅ "${name}" 복사됨 · ${app.label} 여는 중…` : `${app.label}에서 "${name}" 검색하세요`;
+    if (isNativeApp()) window.location.href = app.url;
+    else window.open(app.url, '_blank', 'noopener');
+  }
+
+  function storeButton(name, provider) {
+    const app = STORE_APPS[provider];
+    const b = element('button', `🔎 ${app.label} 검색`,
+        'flex:1 1 130px;padding:10px 8px;border:1.5px solid ' + app.color + ';border-radius:9px;background:#fff;color:' + app.color + ';font-size:13px;font-weight:700;cursor:pointer;');
+    b.type = 'button';
+    b.addEventListener('click', () => openStoreSearch(name, provider, b));
+    return b;
+  }
+
   function oneIngredientRow(name, matches) {
     const row = element('div', null, 'border-top:1px solid #ece9e2;padding:13px 0;');
-    const title = element('div', '🧺 ' + name, 'font-weight:750;font-size:14px;margin-bottom:8px;');
-    row.appendChild(title);
+    row.appendChild(element('div', '🧺 ' + name, 'font-weight:750;font-size:14px;margin-bottom:8px;'));
     const valid = Array.isArray(matches) ? matches.filter(safeProductLink) : [];
-    if (!valid.length) {
-      row.appendChild(element('div', '등록된 상품 공유 링크가 없어요. 아래 버튼으로 재료명을 복사한 뒤 편의점 앱에서 검색하세요.',
-                             'font-size:12px;line-height:1.5;color:#78675d;margin-bottom:7px;'));
-      const copy = element('button', '🔎 재료명 복사 · 앱에서 검색',
-          'padding:8px 12px;border:1px solid #d9d0c4;border-radius:9px;background:#fff;color:#584c3c;font-size:12px;cursor:pointer;');
-      copy.type = 'button';
-      copy.addEventListener('click', () => copyIngredient(name, copy));
-      row.appendChild(copy);
-      return row;
-    }
     for (const p of valid) {
-      const link = element('a', `🛒 ${p.provider === 'pocketcu' ? '포켓CU' : '우리동네GS'} · ${p.product_name} ↗`,
+      const link = element('a', `🛒 ${p.provider === 'pocketcu' ? '포켓CU' : '우리동네GS'} · ${p.product_name} 바로가기 ↗`,
           'display:block;box-sizing:border-box;width:100%;padding:10px 12px;margin:7px 0;border-radius:9px;color:white;text-decoration:none;word-break:break-word;font-size:13px;font-weight:650;background:' + (p.provider === 'pocketcu' ? '#178b4a' : '#1c68b5') + ';');
       link.href = appOpenUrl(p);
       link.target = '_blank';
@@ -75,13 +96,21 @@
       row.appendChild(link);
       if (p.note) row.appendChild(element('div', p.note, 'font-size:11px;color:#796b61;line-height:1.45;'));
     }
+    // 상품 페이지 링크가 없는 앱은 "앱 열기 + 재료명 복사" 버튼을 둔다.
+    const linked = new Set(valid.map(p => p.provider));
+    const missing = providersForRecipe().filter(p => !linked.has(p));
+    if (missing.length) {
+      const wrap = element('div', null, 'display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;');
+      missing.forEach(p => wrap.appendChild(storeButton(name, p)));
+      row.appendChild(wrap);
+    }
     return row;
   }
 
   function render(container, ingredients, items) {
     container.replaceChildren();
-    container.appendChild(element('h4', '🛒 재료별 실제 상품 링크', 'margin:0 0 8px;font-size:17px;color:#513c2d;'));
-    container.appendChild(element('p', '상품 링크는 관리자가 확인해 등록한 공유 주소만 표시해요. 같은 재료는 다른 조합에서도 자동으로 연결됩니다.',
+    container.appendChild(element('h4', '🏪 편의점 앱에서 재료 사기', 'margin:0 0 8px;font-size:17px;color:#513c2d;'));
+    container.appendChild(element('p', '파란·초록 버튼은 그 상품 화면으로 바로 가요. "검색" 버튼은 재료 이름을 복사하고 편의점 앱을 열어요. 앱 검색창을 길게 눌러 붙여넣으면 돼요. 앱에서 픽업·배달 주문도 할 수 있어요.',
                                   'margin:0 0 8px;color:#6a625a;font-size:12px;line-height:1.6;'));
     for (const name of ingredients) {
       container.appendChild(oneIngredientRow(name, items[name]));

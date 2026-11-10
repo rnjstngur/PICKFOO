@@ -3,7 +3,7 @@
 다른 AI(Codex, Claude)와 팀원이 번갈아 작업한다. **작업을 마칠 때마다 이 파일을 갱신한다.**
 비밀번호, 비밀키, `.env` 값, DB 접속 주소, 토큰은 이 파일에 적지 않는다.
 
-- 마지막 갱신: 2026-11-10 15:00 KST, Claude
+- 마지막 갱신: 2026-11-10 15:40 KST, Claude
 - 발표: 2026-11-11
 
 ---
@@ -187,3 +187,19 @@
 - 수정: `www/product-links-db.js`가 GS 링크의 `abr.ge`를 화면 표시 때 `ourgs.abr.ge`로 바꿈(DB 값은 그대로). `index.html` v249
 - 포켓CU 링크(`pocketcu.co.kr/deepLink/...`)는 크롬으로 열림. CU 앱의 검증 도메인은 `pocketcu.onelink.me`뿐이라 같은 방식으로 바꿀 수 없음. 미해결
 - 남은 확인: 실기기에서 GS 링크가 상품 화면까지 가는지(에뮬레이터는 GS 앱 첫 실행 권한 화면까지만 확인)
+
+### 9-6. 브랜드 필터 · 편의점 앱 버튼 · 구매 안내 문구 (2026-11-10 15:40, 구현 완료)
+사용자가 앱에서 발견한 문제와 수정:
+- **CU·GS25 브랜드를 고르면 조합이 0개** → 원인: 선정 조합 브랜드가 `편의점(CU·GS25 등)`이라 `CU`와 글자가 달라 걸러짐.
+  - `www/app.js`: `brandMatches()` 추가. CU·GS25·세븐일레븐을 고르면 `편의점(...)` 공용 조합도 함께 보임. "편의점"은 그대로 전체 편의점.
+  - `www/recommendation.js`: `sameBrand()`도 같은 규칙(선호 브랜드 CU → 공용 편의점 조합 +3점, 이력 유사도도 동일). `sameBrand`를 내보내고 테스트 추가.
+- **"편의점" 브랜드 아이콘이 빈 네모(▣)** → 🛒로 변경.
+- **불닭 말고는 GS·CU 연결이 없음** → 상품 공유 링크는 관리자가 앱에서 복사해 등록한 것만 있음(현재 까르보 불닭볶음면 1건). 가짜 링크는 만들지 않음.
+  - `www/product-links-db.js`: 등록 링크가 없는 재료(또는 한쪽 앱만 등록된 재료)에 "🔎 우리동네GS 검색", "🔎 포켓CU 검색" 버튼 추가. 누르면 재료명 복사 후 `https://www.gsretail.com/` / `https://cu.bgfretail.com/` 이동 → Android 앱에서는 `MainActivity`가 각 앱(`com.gsr.gs25`, `com.bgfcu.membership`)을 실행(APK 재빌드 필요 없음, 기존 코드). 브랜드가 GS25면 GS만, CU면 CU만 표시.
+  - 섹션 제목 "🛒 재료별 실제 상품 링크" → "🏪 편의점 앱에서 재료 사기".
+- **구매 칸 문구가 이해 안 됨** → `www/order-plan.js` 문구 정리: 버튼 "🛵 배민에서 근처 CU 찾기", 붙여넣기 안내를 버튼 아래 💡 한 줄로, 번호(①~④) 대신 "✅ 담을 것 체크리스트", "💰 결제 금액 확인 (선택)" 소제목. 편의점 조합은 "배달은 배민, 직접 사러 가기·편의점 앱은 맨 아래" 두 경로를 첫 줄에 설명.
+- `index.html` 버전: recommendation·app·order-plan·product-links-db `v250` (catalog-recommendation은 v231 유지).
+- 테스트: `node --test tests/recommendation.test.cjs tests/trend.test.cjs` 18개 통과. Playwright(390px, 정적 서버, API 가짜 응답)로 CU/GS25/편의점 각각 8개 표시, 구매 칸·편의점 앱 버튼 화면 확인.
+- 확인 안 됨: 실제 폰에서 "우리동네GS 검색"·"포켓CU 검색" 버튼이 각 앱을 여는지(코드 경로는 기존 `MainActivity` 매핑과 같음), 클립보드 붙여넣기.
+- 남은 일(계획만): 재료별 실제 상품 링크를 더 등록하려면 관리자 화면(Django admin → Ingredient product links)에서 각 앱의 "공유" 링크를 붙여넣거나 CSV 가져오기. DB 변경·마이그레이션 없음.
+- 카카오 키: 사용자가 Railway에 넣었다고 함(15:15). 수집 결과 확인은 아직.

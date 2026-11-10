@@ -11,9 +11,15 @@
     const coffee = new Set([text('카페·음료'),text('카페·디저트')]);
     return coffee.has(a)&&coffee.has(b);
   }
+  // '편의점(CU·GS25 등)' 공용 조합은 CU·GS25·세븐일레븐·편의점 어느 브랜드와도 같은 브랜드로 본다.
+  const CONVENIENCE = new Set(['cu','gs25','세븐일레븐','이마트24','편의점']);
   function sameBrand(value, target) {
     const normalize = v=>text(v).replace('써브웨이','서브웨이');
-    return normalize(value)===normalize(target);
+    const a = normalize(value), b = normalize(target);
+    if (a===b) return true;
+    const shared = v=>v.startsWith('편의점(');
+    const conv = v=>CONVENIENCE.has(v)||shared(v);
+    return (shared(a)&&conv(b))||(shared(b)&&conv(a));
   }
   // 맛 특징: 조합 이름·재료의 키워드 규칙으로 추정한다(학습 모델 아님). 규칙은 아래 표가 전부다.
   const FLAVOR_RULES = {
@@ -260,5 +266,5 @@ function reason(recipe, profile = {}) {
       ' · 매운맛 정보 없음';
   }
 
-  return {score,conflicts,overBudget,tooSpicy,rank,flavorTags,flavorMatches,reason,historyScore,hybridScore,normalizeMenuCategory,scoreCatalogMenu,reasonCatalogMenu};
+  return {sameBrand,score,conflicts,overBudget,tooSpicy,rank,flavorTags,flavorMatches,reason,historyScore,hybridScore,normalizeMenuCategory,scoreCatalogMenu,reasonCatalogMenu};
 });

@@ -41,3 +41,12 @@ test('저장한 매운맛 단계보다 매운 조합은 개인화 추천에서 �
  assert.deepEqual(R.rank([hot,mild],{spicy:'2'}).map(r=>r.id).sort(),['h','m']);
  assert.deepEqual(R.rank([hot,mild],{spicy:'all'}).map(r=>r.id).sort(),['h','m']);
 });
+
+test('편의점 공용 조합은 CU·GS25 선호 브랜드와 같은 브랜드로 본다', () => {
+  const R = require('../www/recommendation.js');
+  assert.equal(R.sameBrand('CU', '편의점(CU·GS25 등)'), true);
+  assert.equal(R.sameBrand('GS25', '편의점(CU·GS25 등)'), true);
+  assert.equal(R.sameBrand('CU', 'GS25'), false);
+  assert.equal(R.sameBrand('스타벅스', '편의점(CU·GS25 등)'), false);
+  assert.equal(R.sameBrand('서브웨이', '써브웨이'), true);
+});

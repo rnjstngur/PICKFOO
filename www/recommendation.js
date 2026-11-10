@@ -74,6 +74,7 @@
   function overBudget(recipe, profile={}) {
     const budget=Number(profile.budget);
     if (profile.budget==null || profile.budget==='' || profile.budget==='all' || !(budget>0)) return false;
+    if (recipe.priceUnknown) return false; // 가격을 표시하지 않는 조합은 예산으로 거르지 않는다
     const price=Number(recipe.price);
     return !(Number.isFinite(price) && price>0 && price<=budget);
   }

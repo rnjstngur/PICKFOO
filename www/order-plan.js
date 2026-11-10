@@ -1,4 +1,4 @@
-/* PICKFOO_ORDER_PLAN — 조합 주문 계획: 주문 채널 연결 · 담을 목록 · 배달비 포함 예상 비용 · 예산 경고 · 주문 소요시간 기록
+/* PICKFOO_ORDER_PLAN — 조합 주문 계획: 주문 채널 연결 · 담을 목록 · 배달비 포함 결제 금액 · 예산 경고 · 주문 소요시간 기록
    - 외부 배달앱의 장바구니 담기·결제는 하지 않는다(공개 API 없음). 사용자가 앱에서 직접 담고 결제한다.
    - 지점은 배달앱이 사용자 주소로 자동 선택하므로 PICKFOO는 브랜드·메뉴·옵션까지만 전달한다.
    - 가격·배달비·최소주문금액은 지점마다 다르므로 사용자가 배달앱에서 확인한 값을 입력하면 다시 계산한다.
@@ -96,7 +96,9 @@
   function render(recipe) {
     injectStyle();
     const all = load();
-    const st = all[recipe.id] || { checked: {}, items: recipe.price || 0, fee: '', min: '' };
+    const P = window.PICKFOO_PRICES;
+    const pinfo = P ? P.info(recipe) : { kind: 'user', total: recipe.price || null };
+    const st = all[recipe.id] || { checked: {}, items: pinfo.total || '', fee: '', min: '' };
     const plan = channelsFor(recipe);
     const prefs = (window.PICKFOO_APP && window.PICKFOO_APP.prefs && window.PICKFOO_APP.prefs()) || null;
     const budget = prefs && prefs.budget && prefs.budget !== 'all' ? num(prefs.budget) : 0;
@@ -131,12 +133,16 @@
       const li = el('li'); const lb = el('label'); const cb = el('input');
       cb.type = 'checkbox'; cb.checked = !!st.checked[name];
       cb.addEventListener('change', () => { const a = load(); const cur = a[recipe.id] || st; cur.checked = cur.checked || {}; cur.checked[name] = cb.checked; a[recipe.id] = cur; save(a); });
-      lb.append(cb, el('span', null, name)); li.appendChild(lb); ul.appendChild(li);
+      const row = P && P.INGREDIENTS[name];
+      const priceTxt = row && row.price != null ? ` · ${row.product} ${P.won(row.price)}` : '';
+      lb.append(cb, el('span', null, name + priceTxt)); li.appendChild(lb); ul.appendChild(li);
     });
     sec.appendChild(ul);
 
     sec.appendChild(el('h4', 'pf-sub', '💰 결제 금액 확인 (선택)'));
-    sec.appendChild(el('p', 'pf-note', '배민에 나온 금액을 넣으면 배달비를 더한 금액과 내 예산을 넘는지 알려줘요. 처음 값은 PICKFOO 예상가예요.'));
+    sec.appendChild(el('p', 'pf-note', pinfo.kind === 'sum'
+      ? '처음 값은 연결 상품 판매가 합계예요. 배민에 나온 금액으로 바꾸고 배달비를 넣으면 결제 금액과 예산 초과 여부를 알려줘요.'
+      : '배민에 나온 상품 금액과 배달비를 넣으면 결제 금액과 예산 초과 여부를 알려줘요.'));
     const cost = el('div', 'pf-cost');
     function field(label, key, value) {
       const l = el('label', null, label); const inp = el('input');
@@ -154,7 +160,7 @@
       const items = num(fItems.value), fee = num(fFee.value), min = num(fMin.value);
       const total = items + fee;
       sum.replaceChildren();
-      const line1 = el('div'); line1.append('예상 결제액 ', el('b', null, won(total)), ` (상품 ${won(items)} + 배달비 ${won(fee)})`);
+      const line1 = el('div'); line1.append('결제 금액 ', el('b', null, won(total)), ` (상품 ${won(items)} + 배달비 ${won(fee)})`);
       sum.appendChild(line1);
       if (min > 0) {
         sum.appendChild(min > items

@@ -127,6 +127,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
             signupForm.reset();
 
+            // 가입 후 로그인 화면으로 자동 이동(가입만으로는 로그인 세션이 만들어지지 않음)
+            showMessage("회원가입이 완료되었습니다! 로그인 화면으로 이동합니다.", false);
+            setTimeout(() => { window.location.href = "login.html"; }, 900);
+
         } catch (error) {
 
             console.error("회원가입 오류:", error);

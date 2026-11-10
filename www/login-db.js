@@ -117,8 +117,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
             console.log("PICKFOO 로그인 성공:", result.user);
 
-            // 서버 세션이 생성된 상태
-            // 메인 페이지 로그인 상태 연동은 다음 단계에서 구현
+            // 서버 세션이 생성된 상태 → 취향을 아직 저장하지 않았으면 취향 설정, 저장했으면 메인으로 이동
+            let nextPage = "index.html";
+            try {
+                const prefResponse = await fetch(
+                    LOGIN_API_BASE + "/api/accounts/preferences/",
+                    { method: "GET", credentials: "include", cache: "no-store" }
+                );
+                if (prefResponse.ok) {
+                    const prefResult = await prefResponse.json();
+                    if (!prefResult.preferences) nextPage = "preferences.html";
+                }
+            } catch (prefError) {
+                console.warn("취향 확인 실패, 메인으로 이동합니다.", prefError);
+            }
+            setTimeout(() => { window.location.href = nextPage; }, 700);
 
         } catch (error) {
 

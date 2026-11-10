@@ -14,32 +14,25 @@
   const DEEPLINKS = Object.assign({ baemin: 'baemin://search', coupangeats: null, yogiyo: null },
                                   window.PICKFOO_ORDER_DEEPLINKS || {});
 
+  // 실제 기기·에뮬레이터에서 동작을 확인한 주문 경로만 둔다(2026-11-09 확인).
+  // 쿠팡이츠·요기요·포켓CU·우리동네GS는 검색 화면으로 가지 않거나 앱 대신 웹사이트가 열려 제외했다.
   const CH = {
-    baemin:      { name: '배달의민족', icon: '🛵', url: 'https://www.baemin.com/' },
-    coupangeats: { name: '쿠팡이츠',   icon: '🍴', url: 'https://www.coupangeats.com/' },
-    yogiyo:      { name: '요기요',     icon: '🍽️', url: 'https://www.yogiyo.co.kr/' },
-    pocketcu:    { name: '포켓CU',     icon: '🏪', url: 'https://cu.bgfretail.com/' },
-    gs25:        { name: '우리동네GS', icon: '🏪', url: 'https://www.gsretail.com/' },
-    starbucks:   { name: '스타벅스 앱(사이렌오더)', icon: '☕', url: 'https://www.starbucks.co.kr/' }
+    baemin: { name: '배달의민족에서 주문하기', icon: '🛵', url: 'https://www.baemin.com/' }
   };
 
-  // 브랜드별 주문 경로. keyword는 배달앱 검색창에 넣을 단어(복사됨).
+  // 브랜드별 배민 검색어. 지점은 배민이 사용자 주소로 자동 선택한다. 메뉴가 늘어나도 링크를 추가할 필요 없다.
   function channelsFor(recipe) {
     const brand = String(recipe.brand || '');
     if (brand.startsWith('편의점') || ['CU', 'GS25', '세븐일레븐'].includes(brand)) {
-      return { keyword: brand === 'GS25' ? 'GS25' : 'CU', note: '배달앱에서 가까운 편의점 지점이 주소 기준으로 표시돼요. CU 또는 GS25 중 재료가 모두 있는 한 곳에서 주문하면 배달비를 한 번만 내요.',
-               list: ['baemin', 'coupangeats', 'yogiyo', 'pocketcu', 'gs25'] };
+      return { keyword: brand === 'GS25' ? 'GS25' : 'CU', note: '배민의 편의점 배달에서 재료가 모두 있는 한 지점을 고르면 배달비를 한 번만 내요.', list: ['baemin'] };
     }
     if (brand === '스타벅스') {
-      return { keyword: '스타벅스', note: '커스텀 옵션(샷·시럽·드리즐·휘핑 등)은 스타벅스 앱 사이렌오더의 퍼스널 옵션에서 고르는 것이 가장 정확해요. 배달은 배달앱 입점 여부를 지역별로 확인하세요.',
-               list: ['starbucks', 'baemin', 'coupangeats'] };
+      return { keyword: '스타벅스', note: '음료 옵션(샷·시럽·드리즐·휘핑)은 메뉴를 고른 뒤 옵션 화면에서 아래 목록대로 선택하세요. 지역에 따라 배달이 안 될 수 있어요.', list: ['baemin'] };
     }
     if (brand === '써브웨이' || brand === '서브웨이') {
-      return { keyword: '써브웨이', note: '빵·소스·추가 토핑은 배달앱 메뉴 옵션에서 아래 목록대로 선택하세요.',
-               list: ['baemin', 'coupangeats', 'yogiyo'] };
+      return { keyword: '써브웨이', note: '빵·소스·추가 토핑은 메뉴 옵션에서 아래 목록대로 선택하세요.', list: ['baemin'] };
     }
-    return { keyword: brand, note: '배달앱에서 브랜드를 검색하면 주소 기준으로 가까운 지점이 표시돼요.',
-             list: ['baemin', 'coupangeats', 'yogiyo'] };
+    return { keyword: brand, note: '배민에서 브랜드를 검색하면 내 주소 기준 가까운 지점이 나와요.', list: ['baemin'] };
   }
 
   const STORE_KEY = 'pickfoo_order_plan_v1';
@@ -62,8 +55,8 @@
     s.textContent = `
 .pf-order{margin-top:4px}
 .pf-order .pf-note{font-size:12px;color:#6f6157;line-height:1.6;margin:6px 0 10px}
-.pf-order .pf-channels{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
-.pf-order .pf-ch{display:flex;gap:8px;align-items:center;padding:11px 12px;border-radius:10px;border:1px solid #e7d9c9;background:#fff;color:#3d3027;font-weight:700;font-size:13px;cursor:pointer;text-align:left}
+.pf-order .pf-channels{display:grid;grid-template-columns:1fr;gap:8px}
+.pf-order .pf-ch{display:flex;gap:8px;align-items:center;justify-content:center;padding:14px 12px;font-size:15px !important;border-radius:10px;border:1px solid #e7d9c9;background:#fff;color:#3d3027;font-weight:700;font-size:13px;cursor:pointer;text-align:left}
 .pf-order .pf-ch.primary{background:#2ac1bc;border-color:#2ac1bc;color:#fff}
 .pf-order .pf-list{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-direction:column;gap:6px}
 .pf-order .pf-list label{display:flex;gap:10px;align-items:center;padding:9px 11px;border:1px solid #eee3d6;border-radius:9px;background:#fffdf9;font-size:13px}
@@ -104,11 +97,11 @@
     const prefs = (window.PICKFOO_APP && window.PICKFOO_APP.prefs && window.PICKFOO_APP.prefs()) || null;
     const budget = prefs && prefs.budget && prefs.budget !== 'all' ? num(prefs.budget) : 0;
 
-    const sec = el('div', 'detail-section pf-order');
+    const sec = el('div', 'pf-order');
     sec.id = 'pf-order-plan';
     sec.dataset.recipe = recipe.id;
-    sec.appendChild(el('h3', null, '🛵 이 조합 주문하기'));
-    sec.appendChild(el('p', 'pf-note', `① 주문할 앱을 누르면 "${plan.keyword}" 검색어가 복사되고 앱이 열려요. 배달의민족은 검색 화면이 바로 열리니 검색창을 길게 눌러 붙여넣으면 내 주소 기준 가까운 지점이 나와요. ${plan.note}`));
+    sec.appendChild(el('h3', null, '🛒 이 조합 구매하기'));
+    sec.appendChild(el('p', 'pf-note', `① 버튼을 누르면 "${plan.keyword}" 검색어가 복사되고 배민 검색 화면이 열려요. 검색창을 길게 눌러 붙여넣으면 내 주소 기준 가까운 지점이 나와요. ${plan.note}`));
 
     const chWrap = el('div', 'pf-channels');
     plan.list.forEach((id, i) => {
@@ -119,7 +112,7 @@
         const a = load(); const cur = a[recipe.id] || st;
         cur.startedAt = cur.startedAt || Date.now(); cur.channel = id;
         a[recipe.id] = cur; save(a);
-        if (!ok) b.textContent = `${CH[id].icon} "${plan.keyword}" 검색 후 주문`;
+        if (!ok) b.textContent = `${CH[id].icon} 배민에서 "${plan.keyword}" 검색 후 주문`;
         openChannel(id, plan.keyword);
       });
       chWrap.appendChild(b);
@@ -197,21 +190,28 @@
     });
     sec.append(done, log);
     renderLog();
-    sec.appendChild(el('p', 'pf-note', '배달앱의 장바구니 담기·결제는 각 앱에서 직접 진행돼요. 외부 앱 자동 담기는 공개 연동 기능이 없어 제공하지 않아요.'));
+    sec.appendChild(el('p', 'pf-note', '장바구니 담기·결제는 배민 앱에서 직접 진행돼요. 배민이 외부 앱의 자동 담기 기능을 공개하지 않아 제공하지 않아요. 편의점 재료를 하나씩 사려면 아래 재료별 상품 링크를 이용하세요.'));
     return sec;
   }
 
+  // 기존 "구매하러 가기" 섹션 안에 넣고, 동작이 확인되지 않은 앱 열기 버튼은 숨긴다.
+  // 재료별 상품 링크(product-links-db.js)는 같은 섹션 아래에 그대로 표시된다.
   function attach() {
     const app = window.PICKFOO_APP;
     if (!app) return;
     const id = app.selected();
     const recipe = id ? app.recipe(id) : null;
-    const shopSection = detail.querySelector('.shopping-grid')?.closest('.detail-section');
+    const grid = detail.querySelector('.shopping-grid');
+    const shopSection = grid?.closest('.detail-section');
     if (!recipe || !shopSection) return;
+    shopSection.classList.add('pf-merged');
+    [...shopSection.children].forEach(c => {
+      if (c.matches('h3') || c.matches('.page-desc') || c.matches('.shopping-grid')) c.style.display = 'none';
+    });
     const existing = detail.querySelector('#pf-order-plan');
     if (existing && existing.dataset.recipe === recipe.id) return;
     if (existing) existing.remove();
-    shopSection.before(render(recipe));
+    shopSection.prepend(render(recipe));
   }
   new MutationObserver(attach).observe(detail, { childList: true, subtree: true });
   attach();

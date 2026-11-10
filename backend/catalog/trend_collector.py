@@ -105,6 +105,7 @@ def is_relevant(query: str, title: str, summary: str = '') -> bool:
     """관련 게시물 판정(띄어쓰기 무시).
     - 제목에 핵심 단어가 모두 있으면 관련.
     - 본문 요약은 핵심 단어가 붙어서 한 덩어리로 나올 때만 인정한다(예: '불닭콘치즈').
+      한 단어 조합(아샷추 등)은 제목에 있을 때만 인정한다.
       2026-11-10 운영 수집에서 맛집 글 요약에 '불닭'과 '콘치즈'가 따로 나오는 경우가 섞여 기준을 좁혔다."""
     toks = [t.replace(' ', '') for t in tokens_for(query)]
     if not toks:
@@ -112,6 +113,9 @@ def is_relevant(query: str, title: str, summary: str = '') -> bool:
     head = _norm(title)
     if all(t in head for t in toks):
         return True
+    if len(toks) == 1:
+        # 한 단어 조합(아샷추 등)은 카페 메뉴판·후기 본문에 지나가듯 나오는 경우가 많아 제목만 인정한다.
+        return False
     return ''.join(toks) in _norm(summary)
 
 
@@ -273,8 +277,8 @@ def load() -> dict | None:
 
 
 # 관련 글 판정 규칙이 바뀌면 올린다. 저장된 결과의 버전이 다르면 24시간이 안 지나도 다시 수집한다.
-# 1: 제목+요약에 단어가 모두 있으면 인정 / 2: 제목, 또는 요약에 붙은 표현만 인정(2026-11-10)
-RULE_VERSION = 2
+# 1: 제목+요약에 단어가 모두 있으면 인정 / 2: 제목, 또는 요약에 붙은 표현만 인정 / 3: 한 단어 조합은 제목만 (2026-11-10)
+RULE_VERSION = 3
 
 
 def is_stale(result: dict | None, now: datetime | None = None) -> bool:

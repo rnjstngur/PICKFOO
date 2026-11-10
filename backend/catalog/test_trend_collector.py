@@ -33,6 +33,9 @@ class TrendCollectorTests(TestCase):
         # 맛집 글 요약에 단어가 따로 나오면 제외, 붙어서 나오면 인정
         self.assertFalse(tc.is_relevant('불닭 콘치즈', '수원역 낙곱새 맛집', '매운맛 불닭 소스에 계란찜, 콘치즈 사이드'))
         self.assertTrue(tc.is_relevant('불닭 콘치즈', '오늘 야식', '편의점 불닭 콘치즈 만들어 먹음'))
+        # 한 단어 조합은 제목에 있어야 한다
+        self.assertFalse(tc.is_relevant('아샷추', '홍대 카페 추천', '메뉴: 아메리카노, 아샷추, 라떼'))
+        self.assertTrue(tc.is_relevant('아샷추', '편의점 아샷추 만들기'))
 
     def test_summary_counts_distinct_authors_and_drops_old_or_unrelated_posts(self):
         posts = [post('a', 1), post('a', 3), post('b', 10), post('c', 25), post('d', 60),

@@ -99,6 +99,9 @@
     const P = window.PICKFOO_PRICES;
     const pinfo = P ? P.info(recipe) : { kind: 'user', total: recipe.price || null };
     const st = all[recipe.id] || { checked: {}, items: pinfo.total || '', fee: '', min: '' };
+    // STEP251: 빈 이전 주문계획에는 확인된 전체 재료 합계를 초기값으로 사용합니다.
+    // 사용자가 이미 입력한 0원이 아닌 상품 합계는 절대 변경하지 않습니다.
+    if (pinfo.kind === 'sum' && num(st.items) === 0) st.items = String(pinfo.total);
     const plan = channelsFor(recipe);
     const prefs = (window.PICKFOO_APP && window.PICKFOO_APP.prefs && window.PICKFOO_APP.prefs()) || null;
     const budget = prefs && prefs.budget && prefs.budget !== 'all' ? num(prefs.budget) : 0;

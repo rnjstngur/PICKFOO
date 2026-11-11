@@ -37,11 +37,15 @@
   // 매장 메뉴 가격(조합 id별). base=기본 메뉴, options=유료 추가 옵션, unpriced=가격 출처가 없어 합계에서 뺀 항목.
   const SB_OPT = 800; // 스타벅스 퍼스널 옵션(샷·시럽·휘핑 등) 1개 — 2024-08-02 인상(위키트리 보도)
   const SB_SRC = '스타벅스 가격 인상 보도(2024-11 톨 가격, 2024-08 옵션 800원)';
+  const SB_SRC2 = '카라멜 프라푸치노 톨 6,100원(2026-10 가격 정리 글) · 옵션 800원(2024-08 인상 보도)';
   const SW_OFFICIAL = '써브웨이 2026-05 가격 인상 보도';
   const SW_LIST = '써브웨이 메뉴 가격 정리 글(2025-12)';
   const STORE = {
     'pf-curated-09': { base: ['딸기 딜라이트 요거트 블렌디드 Tall', 6500], options: [['자바칩', SB_OPT], ['초콜릿 드리즐', SB_OPT], ['휘핑크림', SB_OPT]], source: SB_SRC },
     'pf-curated-10': { base: ['제주 말차 크림 프라푸치노 Tall', 6500], options: [['에스프레소 샷', SB_OPT], ['자바칩', SB_OPT], ['초콜릿 드리즐', SB_OPT]], source: SB_SRC },
+    // 크림 베이스 프라푸치노 가격 출처가 없어, 2026년 가격이 확인된 크림 계열 카라멜 프라푸치노 톨(6,100원)로 계산
+    'pf-curated-11': { base: ['크림 프라푸치노 Tall(카라멜 프라푸치노 가격 기준)', 6100], options: [['자바칩', SB_OPT]], source: SB_SRC2 },
+    'pf-curated-13': { base: ['크림 프라푸치노 Tall(카라멜 프라푸치노 가격 기준)', 6100], options: [['카라멜 시럽', SB_OPT], ['카라멜 드리즐', SB_OPT]], source: SB_SRC2 },
     'pf-curated-12': { base: ['자바 칩 프라푸치노 Tall', 6500], options: [['초콜릿 드리즐', SB_OPT], ['헤이즐넛 시럽', SB_OPT]], source: SB_SRC },
     'pf-curated-14': { base: ['제주 말차 크림 프라푸치노 Tall', 6500], options: [['자바칩', SB_OPT], ['초콜릿 드리즐', SB_OPT]], source: SB_SRC },
     'pf-curated-15': { base: ['이탈리안 비엠티 15cm', 7500], options: [], source: SW_OFFICIAL },

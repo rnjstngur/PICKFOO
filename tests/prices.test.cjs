@@ -32,5 +32,6 @@ test('매장 메뉴는 기본 메뉴 + 유료 옵션 합계, 출처 없는 토�
   const sb=P.info({id:'pf-curated-10',curated:true,brand:'스타벅스',ingredients:[]});
   assert.equal(sb.total,6500+800*3);
   assert.match(P.note({id:'pf-curated-16',curated:true,brand:'써브웨이',ingredients:[]}),/베이컨 추가는 매장 가격/);
-  assert.equal(P.info({id:'pf-curated-11',curated:true,brand:'스타벅스',ingredients:[]}).label,'매장 가격 확인');
+  assert.equal(P.info({id:'pf-curated-11',curated:true,brand:'스타벅스',ingredients:[]}).total,6100+800);
+  assert.equal(P.info({id:'pf-curated-99',curated:true,brand:'스타벅스',ingredients:[]}).label,'매장 가격 확인');
 });

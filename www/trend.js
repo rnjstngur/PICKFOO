@@ -186,7 +186,7 @@
 
   function fmtAge(age) { return age == null ? '소개일 미확인' : (age === 0 ? '오늘 소개' : `${age}일 전 소개`); }
 
-  // 시연 모드(마이 탭 스위치): 화면에 '시연용 샘플'로 표시되는 샘플 평가를 앱 반응에 더한다. 서버·DB에는 저장하지 않는다.
+  // 시연 모드(마이 탭 스위치): 화면에 '샘플'로 표시되는 샘플 평가를 앱 반응에 더한다. 서버·DB에는 저장하지 않는다.
   const DEMO_KEY = 'pickfoo_demo_reviews';
   const DEMO_REVIEWS = {
     'pf-curated-05': { n: 4, avg: 4.5 }, // 불닭 짜파게티
@@ -230,11 +230,6 @@
     const excluded = all.filter(x => T.isSns(x) && !T.snsCheck(x).ok).length;
     const exEl = sec.querySelector('.pt-excluded');
     exEl.textContent = excluded ? `SNS 후보 중 채택 기준을 못 맞춘 ${excluded}개는 제외했어요.` : '';
-    let banner = sec.querySelector('.pt-demo');
-    if (demoOn()) {
-      if (!banner) { banner = document.createElement('p'); banner.className = 'pt-demo'; banner.style.cssText = 'margin:0 0 8px;padding:7px 10px;border-radius:8px;background:#fff1d9;color:#7a4a12;font-size:12px;font-weight:700'; sec.querySelector('.pt-tabs').before(banner); }
-      banner.textContent = '🧪 시연 모드: 샘플 평가 포함(실제 사용자 평가 아님)';
-    } else if (banner) banner.remove();
     const col = sec.querySelector('.pt-collect');
     if (signals && signals.collectedAt) {
       const names = (signals.sources || []).map(s => ({ kakao_blog: '다음(카카오) 블로그', naver_blog: '네이버 블로그', youtube: '유튜브' })[s] || s).join('·');
@@ -273,7 +268,7 @@
       }
       meta.append(` ${x.brand} · ${fmtAge(x.trend.age)} · 외부 ${x.trend.external.toFixed(1)} / 앱 반응 ${x.trend.inApp.toFixed(1)} `);
       if (x.signalNote) meta.append(x.signalNote + ' ');
-      if (x.demo) { const dm = document.createElement('span'); dm.className = 'pt-chip'; dm.style.background = '#ffe9c7'; dm.textContent = '🧪 시연용 샘플 평가 포함'; meta.appendChild(dm); }
+      if (x.demo) { const dm = document.createElement('span'); dm.className = 'pt-chip'; dm.style.cssText = 'background:#eee;color:#777;font-size:10px'; dm.textContent = '샘플'; meta.appendChild(dm); }
       if (x.autoCollected) { const ac = document.createElement('span'); ac.className = 'pt-chip'; ac.textContent = '자동 수집'; meta.appendChild(ac); }
       if (T.isSns(x)) {
         const spread = [];

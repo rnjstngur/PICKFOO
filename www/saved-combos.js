@@ -96,8 +96,8 @@
     box.id = 'pf-demo-switch';
     const cb = el('input'); cb.type = 'checkbox'; cb.checked = demoOn(); cb.style.marginTop = '3px';
     const txt = el('span');
-    txt.append(el('b', '🧪 시연 모드 (샘플 평가 표시)'), el('br'),
-      el('span', '발표 시연용이에요. 켜면 트렌드의 앱 반응 점수에 샘플 평가가 더해지고 "시연용 샘플" 표시가 붙어요. 서버에는 저장되지 않아요.', 'font-size:12px;color:#8a7769;'));
+    txt.append(el('b', '샘플 평가 표시'), el('br'),
+      el('span', '켜면 트렌드 점수에 샘플 평가가 더해지고 해당 조합에 "샘플" 표시가 붙어요. 서버에는 저장되지 않아요.', 'font-size:12px;color:#8a7769;'));
     cb.addEventListener('change', () => {
       try { if (cb.checked) localStorage.setItem(DEMO_KEY, '1'); else localStorage.removeItem(DEMO_KEY); } catch (_) {}
       window.dispatchEvent(new Event('pickfoo-demo-change'));

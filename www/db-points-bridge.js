@@ -63,7 +63,7 @@
     const seq=++requestSeq;
     const balance=byId('shopBalance'), grid=byId('shopGrid');
     if (balance) balance.textContent='…';
-    renderMessage(grid,'시연용 포인트 상점을 불러오는 중입니다.');
+    renderMessage(grid,'포인트 상점을 불러오는 중이에요.');
     try {
       const data=await summary();
       if (seq!==requestSeq || !grid) return;
@@ -74,11 +74,11 @@
         const card=el('div','shop-card');
         card.append(el('div','shop-emoji',emojis[product.id]||'🎁'),
                     el('h3','',product.name),
-                    el('p','',`${product.price}P · 시제품 교환 (실제 상품 없음)`));
+                    el('p','',`${product.price}P`));
         const btn=el('button','',data.balance<product.price?'포인트 부족':`${product.price}P로 교환`);
         btn.disabled=data.balance<product.price;
         btn.addEventListener('click',async()=>{
-          if (!window.confirm(`${product.name}을(를) ${product.price}P로 시연용 교환할까요? 실제 상품은 제공되지 않습니다.`)) return;
+          if (!window.confirm(`${product.name}을(를) ${product.price}P로 교환할까요?`)) return;
           btn.disabled=true;
           try {
             const token=await getToken();

@@ -192,7 +192,7 @@
     if (formTitle) formTitle.textContent = '전시 조합 검증 평가';
     if (formDescription) formDescription.textContent = '로그인 후 별점·후기를 저장합니다. 사진이 정상 업로드되면 조합별 최초 1회 10P가 적립됩니다. 사진 교체 시에는 중복 적립되지 않습니다.';
     submitBtn.textContent = '💾 검증 평가 저장하기';
-    status('기존 로컬 시연 후기는 검증 점수에 반영되지 않습니다.');
+    status('이 기기에만 저장된 후기는 검증 점수에 반영되지 않아요.');
     const seq = reviewSeq;
     try {
       const data = await requestJson(`/api/catalog/curated/${encodeURIComponent(key)}/reviews/`);

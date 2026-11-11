@@ -166,14 +166,13 @@
   sec.id = 'pfTrendPanel';
   sec.setAttribute('aria-label', '트렌드 조합');
   sec.innerHTML = `<h2>📈 트렌드 조합</h2>
-<p class="pt-desc">SNS·기사에 최근 올라온 조합일수록, PICKFOO 안에서 최근 7일 평가가 많을수록 점수가 높아요. 오래전에 유명했던 조합은 '스테디'로 따로 보여줘요.</p>
+<p class="pt-desc">최근 블로그·기사 언급과 PICKFOO 평가로 매긴 순위예요.</p>
 <div class="pt-tabs" role="group" aria-label="트렌드 분류">
   <button type="button" class="pt-tab" data-k="recent" aria-pressed="true">지금 트렌드</button>
   <button type="button" class="pt-tab" data-k="sns" aria-pressed="false">SNS 화제</button>
   <button type="button" class="pt-tab" data-k="steady" aria-pressed="false">스테디</button>
 </div>
 <div class="pt-list" aria-live="polite"></div>
-<p class="pt-policy">점수 = 0.6 × 외부 최신성(반감기 ${T.HALF_LIFE_DAYS}일, 소개 후 ${T.RECENT_DAYS}일 지나면 스테디로 이동) + 0.4 × 앱 반응(최근 7일 서로 다른 평가자 수·평균 별점).<br>SNS 조합 채택 기준: ① 공개 게시물 주소·게시일 확인 ② 서로 다른 계정 ${T.MIN_ACCOUNTS}곳 이상이 올렸거나 한 게시물 반응 ${T.MIN_REACTIONS.toLocaleString()} 이상 ③ 재료·옵션 2개 이상 확인 ④ 주류 제외. 하나라도 못 맞추면 목록에서 빼요. 블로그 언급은 카카오(다음) 공식 검색 API로 하루 한 번 자동 수집하고, 기사 출처는 팀이 확인해 넣어요.</p>
 <p class="pt-policy pt-excluded"></p>
 <p class="pt-policy pt-collect"></p>`;
   const anchor = document.getElementById('pickfooTrending7d') || results;
@@ -234,7 +233,7 @@
     let banner = sec.querySelector('.pt-demo');
     if (demoOn()) {
       if (!banner) { banner = document.createElement('p'); banner.className = 'pt-demo'; banner.style.cssText = 'margin:0 0 8px;padding:7px 10px;border-radius:8px;background:#fff1d9;color:#7a4a12;font-size:12px;font-weight:700'; sec.querySelector('.pt-tabs').before(banner); }
-      banner.textContent = '🧪 시연 모드: 앱 반응 점수에 시연용 샘플 평가가 포함돼 있어요(실제 사용자 평가 아님). 마이 탭에서 끌 수 있어요.';
+      banner.textContent = '🧪 시연 모드: 샘플 평가 포함(실제 사용자 평가 아님)';
     } else if (banner) banner.remove();
     const col = sec.querySelector('.pt-collect');
     if (signals && signals.collectedAt) {

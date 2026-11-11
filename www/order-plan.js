@@ -25,14 +25,14 @@
     const brand = String(recipe.brand || '');
     if (brand.startsWith('편의점') || ['CU', 'GS25', '세븐일레븐'].includes(brand)) {
       return { keyword: brand === 'GS25' ? 'GS25' : 'CU', convenience: true,
-               intro: '재료를 집까지 한 번에 배달받고 싶다면 배민에서 근처 편의점을 찾아 주문하세요. 직접 사러 가거나 편의점 앱으로 사려면 맨 아래 "편의점 앱에서 재료 사기"를 이용하세요.',
+               intro: '배민으로 근처 편의점 재료를 한 번에 배달받을 수 있어요.',
                list: ['baemin'] };
     }
     if (brand === '스타벅스') {
-      return { keyword: '스타벅스', intro: '배민에서 가까운 스타벅스를 찾아 음료를 고른 뒤, 옵션(샷·시럽·드리즐·휘핑)을 아래 체크리스트대로 고르세요. 지역에 따라 배달이 안 될 수 있어요.', list: ['baemin'] };
+      return { keyword: '스타벅스', intro: '배민에서 가까운 스타벅스를 찾아 아래 옵션대로 주문하세요.', list: ['baemin'] };
     }
     if (brand === '써브웨이' || brand === '서브웨이') {
-      return { keyword: '써브웨이', intro: '배민에서 가까운 써브웨이를 찾아 메뉴를 고른 뒤, 빵·소스·토핑을 아래 체크리스트대로 고르세요.', list: ['baemin'] };
+      return { keyword: '써브웨이', intro: '배민에서 가까운 써브웨이를 찾아 아래 빵·소스대로 주문하세요.', list: ['baemin'] };
     }
     return { keyword: brand, intro: `배민에서 가까운 ${brand} 매장을 찾아 메뉴를 고른 뒤, 아래 체크리스트대로 담으세요.`, list: ['baemin'] };
   }
@@ -127,11 +127,10 @@
       chWrap.appendChild(b);
     });
     sec.appendChild(chWrap);
-    sec.appendChild(el('p', 'pf-hint', `💡 배민이 열리면 검색창을 길게 눌러 "붙여넣기"를 누르세요. "${plan.keyword}"가 입력돼 내 주소 근처 매장이 나와요.`));
+    sec.appendChild(el('p', 'pf-hint', `💡 배민 검색창을 길게 눌러 붙여넣기 → "${plan.keyword}"`));
 
     sec.appendChild(el('h4', 'pf-sub', '✅ 담을 것 체크리스트'));
-    sec.appendChild(el('p', 'pf-note', '장바구니에 담은 것을 하나씩 체크하면 빠뜨리지 않아요.'));
-    const ul = el('ul', 'pf-list');
+        const ul = el('ul', 'pf-list');
     (recipe.ingredients || []).forEach(name => {
       const li = el('li'); const lb = el('label'); const cb = el('input');
       cb.type = 'checkbox'; cb.checked = !!st.checked[name];
@@ -144,8 +143,8 @@
 
     sec.appendChild(el('h4', 'pf-sub', '💰 결제 금액 확인 (선택)'));
     sec.appendChild(el('p', 'pf-note', pinfo.kind === 'sum'
-      ? '처음 값은 연결 상품 판매가 합계예요. 배민에 나온 금액으로 바꾸고 배달비를 넣으면 결제 금액과 예산 초과 여부를 알려줘요.'
-      : '배민에 나온 상품 금액과 배달비를 넣으면 결제 금액과 예산 초과 여부를 알려줘요.'));
+      ? '배달비를 넣으면 결제 금액과 예산 초과 여부를 알려줘요.'
+      : '배민 금액과 배달비를 넣으면 예산 초과 여부를 알려줘요.'));
     const cost = el('div', 'pf-cost');
     function field(label, key, value) {
       const l = el('label', null, label); const inp = el('input');
@@ -206,7 +205,6 @@
     });
     sec.append(done, log);
     renderLog();
-    sec.appendChild(el('p', 'pf-note', '담기와 결제는 배민 앱에서 직접 해요. 배민은 다른 앱이 장바구니에 대신 담는 기능을 열어 두지 않았어요.'));
     return sec;
   }
 

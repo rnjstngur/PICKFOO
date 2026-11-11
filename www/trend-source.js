@@ -64,7 +64,6 @@
       box.appendChild(a);
     });
     items.filter(x => x.text).forEach(x => box.appendChild(el('div', '· ' + x.text, 'font-size:12px;color:#6f6157;line-height:1.55;')));
-    if (r.curated) box.appendChild(el('div', POLICY, 'font-size:11px;color:#8a7769;line-height:1.55;margin-top:6px;'));
     anchor.after(box);
   }
   new MutationObserver(attach).observe(detail, { childList: true, subtree: true });

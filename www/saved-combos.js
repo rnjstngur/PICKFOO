@@ -73,7 +73,16 @@
       row.type = 'button';
       const price = window.PICKFOO_PRICES ? window.PICKFOO_PRICES.info(r).label : '';
       row.append(el('span', r.name, 'font-weight:750;color:#3d3027;'), el('span', `${r.brand || ''}${price ? ' · ' + price : ''} ›`, 'font-size:12px;color:#8a7769;'));
-      row.addEventListener('click', () => { if (typeof window.openDetail === 'function') window.openDetail(r.id); });
+      row.addEventListener('click', () => {
+        // app.js 함수는 밖에서 부를 수 없어 홈의 조합 카드를 눌러 상세를 연다.
+        const home = document.querySelector('.bottom-nav .nav-item[data-view="homeView"]');
+        if (home) home.click();
+        setTimeout(() => {
+          const card = [...document.querySelectorAll('.recipe-card')].find(c => (c.querySelector('.recipe-title') || c).textContent.trim() === r.name)
+            || [...document.querySelectorAll('.recipe-card')].find(c => c.textContent.includes(r.name));
+          if (card) card.click();
+        }, 150);
+      });
       box.appendChild(row);
     });
   }

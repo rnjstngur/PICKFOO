@@ -3,7 +3,8 @@
    - 편의점 조합: 재료마다 연결한 실제 상품의 판매가(정가)를 더한 값. 출처는 CU 공식 홈페이지 상품 목록(cu.bgfretail.com)
      또는 팀원이 앱의 상품 링크를 열어 확인한 가격. 행사가(1+1 등)는 반영하지 않는다.
    - 재료 하나라도 가격이 없으면 합계를 보여주지 않는다(확인된 재료 가격만 표시).
-   - 스타벅스·써브웨이 등 매장 메뉴: 공식 가격표를 온라인에서 확인할 수 없어 숫자를 표시하지 않는다.
+   - 스타벅스·써브웨이 매장 메뉴(2026-11-11): 공개 기사·가격 정리 글에서 확인한 기본 메뉴 가격 + 유료 옵션.
+     출처를 찾지 못한 메뉴(크림 베이스 프라푸치노)와 추가 토핑 가격은 숫자를 만들지 않는다.
    - 사용자가 등록한 조합: 등록자가 입력한 가격.
    "약", "예상" 같은 추정 표현은 쓰지 않는다. */
 (function (root) {
@@ -33,6 +34,24 @@
     '우유': { product: '서울)흰우유200ml', price: 1200, source: '포켓CU 상품 화면' },
     '얼음컵': { product: 'del)빅컵얼음230g', price: 1000, source: '포켓CU 상품 화면' }
   };
+  // 매장 메뉴 가격(조합 id별). base=기본 메뉴, options=유료 추가 옵션, unpriced=가격 출처가 없어 합계에서 뺀 항목.
+  const SB_OPT = 800; // 스타벅스 퍼스널 옵션(샷·시럽·휘핑 등) 1개 — 2024-08-02 인상(위키트리 보도)
+  const SB_SRC = '스타벅스 가격 인상 보도(2024-11 톨 가격, 2024-08 옵션 800원)';
+  const SW_OFFICIAL = '써브웨이 2026-05 가격 인상 보도';
+  const SW_LIST = '써브웨이 메뉴 가격 정리 글(2025-12)';
+  const STORE = {
+    'pf-curated-09': { base: ['딸기 딜라이트 요거트 블렌디드 Tall', 6500], options: [['자바칩', SB_OPT], ['초콜릿 드리즐', SB_OPT], ['휘핑크림', SB_OPT]], source: SB_SRC },
+    'pf-curated-10': { base: ['제주 말차 크림 프라푸치노 Tall', 6500], options: [['에스프레소 샷', SB_OPT], ['자바칩', SB_OPT], ['초콜릿 드리즐', SB_OPT]], source: SB_SRC },
+    'pf-curated-12': { base: ['자바 칩 프라푸치노 Tall', 6500], options: [['초콜릿 드리즐', SB_OPT], ['헤이즐넛 시럽', SB_OPT]], source: SB_SRC },
+    'pf-curated-14': { base: ['제주 말차 크림 프라푸치노 Tall', 6500], options: [['자바칩', SB_OPT], ['초콜릿 드리즐', SB_OPT]], source: SB_SRC },
+    'pf-curated-15': { base: ['이탈리안 비엠티 15cm', 7500], options: [], source: SW_OFFICIAL },
+    'pf-curated-16': { base: ['에그마요 15cm', 6200], options: [], unpriced: ['베이컨 추가'], source: SW_OFFICIAL },
+    'pf-curated-17': { base: ['스테이크 & 치즈 15cm', 9400], options: [], source: SW_LIST },
+    'pf-curated-18': { base: ['쉬림프 15cm', 8800], options: [], unpriced: ['에그마요 추가'], source: SW_LIST },
+    'pf-curated-19': { base: ['치킨 데리야끼 15cm', 8300], options: [], source: SW_LIST },
+    'pf-curated-20': { base: ['스파이시 이탈리안 15cm', 8100], options: [], source: SW_LIST }
+  };
+
   // 편의점에서 따로 파는 상품이 없는 재료(합계에서 빼고 안내만 한다)
   const NOT_SOLD = { '에스프레소 샷': '편의점 픽업 상품이 없어 합계에서 제외(매장 커피 머신 이용)' };
 
@@ -46,7 +65,13 @@
       const p = Number(r.price) || 0;
       return { kind: 'user', total: p || null, label: p ? won(p) : '가격 미입력' };
     }
-    if (!isConvenience(r)) return { kind: 'store', total: null, label: '매장 가격 확인' };
+    if (!isConvenience(r)) {
+      const m = STORE[r.id];
+      if (!m) return { kind: 'store', total: null, label: '매장 가격 확인' };
+      const items = [{ name: m.base[0], price: m.base[1] }].concat(m.options.map(o => ({ name: o[0] + ' 추가', price: o[1] })));
+      const total = items.reduce((sum, x) => sum + x.price, 0);
+      return { kind: 'menu', total, label: won(total), items, unpriced: m.unpriced || [], source: m.source };
+    }
     const items = [], missing = [], excluded = [];
     (r.ingredients || []).forEach(name => {
       if (NOT_SOLD[name]) { excluded.push({ name, reason: NOT_SOLD[name] }); return; }
@@ -59,19 +84,22 @@
     return { kind: 'sum', total, label: won(total), items, missing, excluded };
   }
 
-  // 상세 화면 안내 문구
+  // 상세 화면 가격 안내(짧게)
   function note(r) {
     const i = info(r);
     if (i.kind === 'sum' || i.kind === 'pending') {
-      const parts = i.items.map(x => `${x.name} ${won(x.price)}`);
-      let s = `가격은 연결한 상품의 판매가 합계예요(${CU_SITE} 등, ${CHECKED} 확인 · 행사가 미반영).`;
-      if (parts.length) s += ' ' + parts.join(' + ') + '.';
-      if (i.excluded && i.excluded.length) s += ' ' + i.excluded.map(x => `${x.name}: ${x.reason}`).join(' ');
+      let s = '가격: ' + i.items.map(x => `${x.name} ${won(x.price)}`).join(' + ') + ` (CU·GS 판매가, ${CHECKED.slice(0, 7)} 기준).`;
+      if (i.excluded && i.excluded.length) s += ' ' + i.excluded.map(x => `${x.name}은 편의점 상품이 없어 제외.`).join(' ');
       if (i.kind === 'pending') s += ` 확인 중: ${i.missing.join(', ')}.`;
       return s;
     }
-    if (i.kind === 'store') return '매장 메뉴는 공식 가격표가 온라인에 없어 가격을 표시하지 않아요. 배민이나 매장 앱에서 확인하세요.';
-    return '가격은 조합을 등록한 사람이 입력한 값이에요.';
+    if (i.kind === 'menu') {
+      let s = '가격: ' + i.items.map(x => `${x.name} ${won(x.price)}`).join(' + ') + '.';
+      if (i.unpriced.length) s += ` ${i.unpriced.join('·')}는 매장 가격에 따라 추가돼요.`;
+      return s + ` 출처: ${i.source}.`;
+    }
+    if (i.kind === 'store') return '가격은 매장에서 확인하세요.';
+    return '가격은 등록한 사람이 입력한 값이에요.';
   }
 
   // 앱 데이터의 price를 확인된 합계로 맞춘다(예산 필터·정렬이 같은 값을 쓰도록).
@@ -80,12 +108,13 @@
       const i = info(r);
       if (i.kind === 'sum') r.price = i.total;
       // 화면에 숫자를 보여주지 않는 조합(매장 메뉴·가격 확인 중)은 예산 필터에서 빼지 않는다.
+      if (i.kind === 'menu') r.price = i.total;
       r.priceUnknown = i.kind === 'store' || i.kind === 'pending';
     });
     return recipes;
   }
 
-  const api = { CHECKED, INGREDIENTS, NOT_SOLD, info, note, applyTo, won };
+  const api = { CHECKED, INGREDIENTS, NOT_SOLD, STORE, info, note, applyTo, won };
   if (typeof module === 'object' && module.exports) module.exports = api;
   root.PICKFOO_PRICES = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -128,7 +128,7 @@
   function render(container, ingredients, items) {
     container.replaceChildren();
     container.appendChild(element('h4', '🏪 편의점 앱에서 재료 사기', 'margin:0 0 8px;font-size:17px;color:#513c2d;'));
-    container.appendChild(element('p', '파란·초록 버튼은 그 상품 화면으로 바로 가요. "검색" 버튼은 재료 이름을 복사하고 편의점 앱을 열어요. 앱 검색창을 길게 눌러 붙여넣으면 돼요. 앱에서 픽업·배달 주문도 할 수 있어요.',
+    container.appendChild(element('p', '버튼을 누르면 편의점 앱 상품 화면으로 이동해요.',
                                   'margin:0 0 8px;color:#6a625a;font-size:12px;line-height:1.6;'));
     for (const name of ingredients) {
       container.appendChild(oneIngredientRow(name, items[name]));
@@ -151,8 +151,6 @@
         'display:block;color:#617369;font-size:11px;line-height:1.5;margin-top:6px;'));
       container.appendChild(totals);
     }
-    container.appendChild(element('p', '상품의 정확한 규격, 가격, 재고와 알레르기 정보는 실제 판매처에서 확인하세요. 앱 열림은 Android 환경에 따라 달라질 수 있어요.',
-                                  'font-size:11px;color:#8a7769;line-height:1.6;margin:8px 0 0;'));
   }
 
   async function refresh() {

@@ -35,3 +35,11 @@ test('매장 메뉴는 기본 메뉴 + 유료 옵션 합계, 출처 없는 토�
   assert.equal(P.info({id:'pf-curated-11',curated:true,brand:'스타벅스',ingredients:[]}).total,6100+800);
   assert.equal(P.info({id:'pf-curated-99',curated:true,brand:'스타벅스',ingredients:[]}).label,'매장 가격 확인');
 });
+test('자동 발견 조합: 관리자 확인 가격이 있으면 표시, 없으면 가격 확인 중(0원 아님)',()=>{
+  const a={discovered:true,curated:false,brand:'편의점(CU·GS25 등)',ingredients:['짜파게티','스팸'],price:4300};
+  const b={discovered:true,curated:false,brand:'편의점(CU·GS25 등)',ingredients:['짜파게티','스팸'],price:0};
+  P.applyTo([a,b]);
+  assert.equal(P.info(a).label,'4,300원'); assert.equal(a.priceUnknown,false);
+  assert.equal(P.info(b).label,'가격 확인 중'); assert.equal(b.priceUnknown,true);
+  assert.match(P.note(b),/판매처에서 확인/);
+});

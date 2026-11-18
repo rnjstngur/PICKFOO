@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import discovery_views
 
 urlpatterns = [
     path("reviews/<int:review_id>/photo/view/", views.recipe_review_photo_view, name="recipe-review-photo-view"),
@@ -104,4 +105,5 @@ urlpatterns += [
 from .trend_views import trend_signals
 urlpatterns += [
     path('trend-signals/', trend_signals, name='pickfoo-trend-signals'),
+    path('discovered/', discovery_views.discovered_list, name='catalog-discovered-list'),
 ]

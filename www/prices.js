@@ -65,6 +65,10 @@
   // { kind: 'sum'|'pending'|'store'|'user', total, label, items:[{name, product, price}], excluded:[...], missing:[...] }
   function info(r) {
     if (!r) return { kind: 'store', total: null, label: '매장 가격 확인' };
+    if (r.discovered) {
+      const p = Number(r.price) || 0;
+      return p > 0 ? { kind: 'found', total: p, label: won(p) } : { kind: 'pending', total: null, label: '가격 확인 중', items: [], missing: [], excluded: [] };
+    }
     if (!r.curated) {
       const p = Number(r.price) || 0;
       return { kind: 'user', total: p || null, label: p ? won(p) : '가격 미입력' };
@@ -91,6 +95,7 @@
   // 상세 화면 가격 안내(짧게)
   function note(r) {
     const i = info(r);
+    if (r && r.discovered) return i.kind === 'found' ? '가격: 관리자가 확인한 판매가 합계예요.' : '가격은 판매처에서 확인하세요.';
     if (i.kind === 'sum' || i.kind === 'pending') {
       let s = '가격: ' + i.items.map(x => `${x.name} ${won(x.price)}`).join(' + ') + ` (CU·GS 판매가, ${CHECKED.slice(0, 7)} 기준).`;
       if (i.excluded && i.excluded.length) s += ' ' + i.excluded.map(x => `${x.name}은 편의점 상품이 없어 제외.`).join(' ');

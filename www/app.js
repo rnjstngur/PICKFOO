@@ -827,14 +827,64 @@ async function loadMyDbRecipes() {
     const localRecipes = data.recipes.filter(recipe => !isDbRecipe(recipe));
     data.recipes = [
       ...localRecipes.filter(recipe => recipe.curated === true),
+      ...localRecipes.filter(recipe => recipe.discovered === true),
       ...serverRecipes,
-      ...localRecipes.filter(recipe => recipe.curated !== true)
+      ...localRecipes.filter(recipe => recipe.curated !== true && recipe.discovered !== true)
     ];
 
     renderRecipes();
     console.log('✅ PostgreSQL에서 내 음식 조합 ' + serverRecipes.length + '개 불러오기 성공');
   } catch (error) {
     console.error('PICKFOO DB 음식 조합 조회 오류:', error);
+  }
+}
+
+// 2026-11-18 신규 조합 자동 발견: 블로그에서 찾고 관리자가 승인한 조합을 목록에 더한다(로그인 불필요).
+async function loadDiscoveredRecipes() {
+  try {
+    const response = await fetch(window.PICKFOO_API_BASE + '/api/catalog/discovered/', { cache: 'no-store' });
+    if (!response.ok) throw new Error('신규 조합 조회 실패 (HTTP ' + response.status + ')');
+    const payload = await response.json();
+    if (!Array.isArray(payload.items)) throw new Error('신규 조합 응답 형식이 올바르지 않습니다.');
+    window.PICKFOO_DISCOVERY = { lastRun: payload.lastRun || null, count: payload.items.length };
+    const found = payload.items.filter(item => item && Number.isSafeInteger(item.id) && Array.isArray(item.ingredients) && item.ingredients.length >= 2)
+      .map(item => {
+        const src = item.source || {};
+        return {
+          id: 'disc' + item.id,
+          discovered: true,
+          name: item.name,
+          brand: item.brand || '편의점(CU·GS25 등)',
+          category: item.category || '편의점 간편식',
+          // 가격 미확인은 0원으로 오인하지 않도록 priceUnknown으로 표시하고 예산 필터에서 빼지 않는다.
+          price: Number.isSafeInteger(item.price) && item.price > 0 ? item.price : 0,
+          priceUnknown: !(Number.isSafeInteger(item.price) && item.price > 0),
+          spicy: Number.isInteger(item.spicy) ? item.spicy : 0,
+          emoji: '🆕',
+          color: '#e9f1de',
+          demoPicked: false,
+          rating: 0,
+          reviewCount: 0,
+          ingredients: item.ingredients,
+          steps: item.steps && item.steps.length ? item.steps : ['재료를 준비해 원문 방법대로 섞어요.'],
+          desc: item.description || `최근 블로그 ${item.mentions || 1}곳에서 소개된 새 조합이에요.`,
+          sourceNote: src.url || '',
+          sourceTitle: src.title || '',
+          sourceDate: src.date || item.lastSeen || null,
+          mentions: item.mentions || 0,
+          firstSeen: item.firstSeen || null
+        };
+      });
+    // 승인이 취소·제외된 조합이 남지 않도록 이전 발견 조합을 모두 바꾼다.
+    const rest = data.recipes.filter(recipe => !recipe.discovered);
+    const curated = rest.filter(recipe => recipe.curated === true);
+    data.recipes = [...curated, ...found, ...rest.filter(recipe => recipe.curated !== true)];
+    if (window.PICKFOO_PRICES) window.PICKFOO_PRICES.applyTo(data.recipes);
+    save();
+    renderRecipes();
+    window.dispatchEvent(new Event('pickfoo-discovered-loaded'));
+  } catch (error) {
+    console.warn('PICKFOO 신규 조합을 불러오지 못했습니다:', error);
   }
 }
 
@@ -885,9 +935,9 @@ async function loadDbCardReviewStats(recipeId) {
   }
 }
 
-function renderRecipes(){const recipes=filtered();$('#recipeGrid').innerHTML='';$('#emptyState').classList.toggle('hidden',recipes.length>0);$('#resultsTitle').textContent=state.food!=='전체 음식'?state.food:state.brand!=='전체 브랜드'?state.brand:'추천 조합';$('#resultsSubtitle').textContent=`조건에 맞는 조합 ${recipes.length}개`;recipes.forEach(r=>{const card=document.createElement('article');card.className='recipe-card';card.innerHTML=`<div class="recipe-art" style="background:${r.color}">${r.emoji}${r.curated?(r.verification?.verified?'<span class="badge">✓ 내부 검증</span>':'<span class="badge">전시 추천</span>'):r.dbSaved?'<span class="badge">DB 등록</span>':(r.demoPicked??r.verified)?'<span class="badge">PICKFOO 추천</span>':''}</div><div class="recipe-body"><div class="recipe-brand">${esc(r.brand)} · ${esc(r.category)}</div><div class="recipe-title">${esc(r.name)}</div><div class="recipe-meta"><span class="price">${pfPriceLabel(r)}</span><span class="rating">${r.curated?(r.verification?.verified?"✓ 검증 · 보정 ★ "+Number(r.verification.adjusted_rating).toFixed(2):r.verification?"평가 "+r.verification.review_count+"건 · 검증 대기":"검증 점수 조회 중…"):r.dbSaved?esc(dbCardReviewLabel(r.serverRecipeId)):"예시 ★ "+Number(r.rating||0).toFixed(1)}</span></div><div class="recipe-tags"><span class="tag">${['안 매움','약간 매움','매움'][r.spicy]||'보통'}</span><span class="tag">재료 ${r.ingredients.length}개</span></div>${reasonFor(r)?`<p class="reason">${esc(reasonFor(r))}</p>`:''}</div></div>`;card.addEventListener('click',()=>openDetail(r.id));$('#recipeGrid').appendChild(card);if(r.dbSaved)loadDbCardReviewStats(r.serverRecipeId)})}
+function renderRecipes(){const recipes=filtered();$('#recipeGrid').innerHTML='';$('#emptyState').classList.toggle('hidden',recipes.length>0);$('#resultsTitle').textContent=state.food!=='전체 음식'?state.food:state.brand!=='전체 브랜드'?state.brand:'추천 조합';$('#resultsSubtitle').textContent=`조건에 맞는 조합 ${recipes.length}개`;recipes.forEach(r=>{const card=document.createElement('article');card.className='recipe-card';card.innerHTML=`<div class="recipe-art" style="background:${r.color}">${r.emoji}${r.curated?(r.verification?.verified?'<span class="badge">✓ 내부 검증</span>':'<span class="badge">PICKFOO 추천</span>'):r.discovered?'<span class="badge">🆕 새로 발견</span>':r.dbSaved?'<span class="badge">DB 등록</span>':(r.demoPicked??r.verified)?'<span class="badge">PICKFOO 추천</span>':''}</div><div class="recipe-body"><div class="recipe-brand">${esc(r.brand)} · ${esc(r.category)}</div><div class="recipe-title">${esc(r.name)}</div><div class="recipe-meta"><span class="price">${pfPriceLabel(r)}</span><span class="rating">${r.curated?(r.verification?.verified?"✓ 검증 · 보정 ★ "+Number(r.verification.adjusted_rating).toFixed(2):r.verification?"평가 "+r.verification.review_count+"건 · 검증 대기":"검증 점수 조회 중…"):r.dbSaved?esc(dbCardReviewLabel(r.serverRecipeId)):r.discovered?"블로그 "+Number(r.mentions||0)+"곳 언급":"예시 ★ "+Number(r.rating||0).toFixed(1)}</span></div><div class="recipe-tags"><span class="tag">${['안 매움','약간 매움','매움'][r.spicy]||'보통'}</span><span class="tag">재료 ${r.ingredients.length}개</span></div>${reasonFor(r)?`<p class="reason">${esc(reasonFor(r))}</p>`:''}</div></div>`;card.addEventListener('click',()=>openDetail(r.id));$('#recipeGrid').appendChild(card);if(r.dbSaved)loadDbCardReviewStats(r.serverRecipeId)})}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function openDetail(id){const r=data.recipes.find(x=>x.id===id);if(!r)return;state.selected=id;document.getElementById('detailContent').dataset.curatedKey = r.curated ? r.id : '';const reviews=data.reviews.filter(x=>x.recipeId===id);$('#detailContent').innerHTML=`<div class="detail-hero" style="background:${r.color}"><span>${r.emoji}</span>${r.curated?(r.verification?.verified?'<span class="verified-badge">✓ PICKFOO 내부 검증</span>':'<span class="verified-badge">팀 선정 · 검증 대기</span>'):r.dbSaved?'<span class="verified-badge">사용자 등록 · DB 저장</span>':(r.demoPicked??r.verified)?'<span class="verified-badge">PICKFOO 선정</span>':''}</div><div class="detail-brand">${esc(r.brand)} · ${esc(r.category)}</div><h1 class="detail-title">${esc(r.name)}</h1><p class="detail-intro">${esc(r.desc||'내 취향에 맞게 재료를 조합해 보세요.')}</p><div class="detail-stats"><span>💰 ${pfPriceLabel(r)}</span><span>${r.curated?(r.verification?.adjusted_rating!=null?"보정 평점 ⭐ "+r.verification.adjusted_rating:"보정 평점 미집계"):r.dbSaved?"DB 평균 별점 조회 중…":"예시 평점 ⭐ "+Number(r.rating||0).toFixed(1)+" (가상 수치)"}</span><span>${r.dbSaved?"DB 리뷰 조회 중…":"이 기기의 후기 "+reviews.length+"건"}</span><span>🌶️ ${['안 매움','약간 매움','매움'][r.spicy]||'보통'}</span></div><div class="detail-section"><h3>🧺 필요한 재료</h3><div class="ingredient-list">${r.ingredients.map(i=>`<div class="ingredient">${esc(i)}</div>`).join('')}</div><p class="notice">${r.curated?pfPriceNote(r)+" 알레르기·원재료는 판매처에서 확인하세요.":r.dbSaved?"이 조합·가격·재료는 사용자가 입력한 정보입니다. 실제 판매 여부, 원재료와 알레르기 안전은 확인되지 않았습니다.":"알레르기·원재료는 판매처에서 확인하세요."}</p></div><div class="detail-section"><h3>👩‍🍳 조합 만드는 방법</h3><ol class="step-list">${r.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol></div><div class="detail-section"><h3>🛒 구매하러 가기</h3><div class="shopping-grid">${shops.map(s=>`<a class="shop-link" href="${s.url}" data-shop="${s.id}" rel="noopener noreferrer"><span class="shop-icon">${s.icon}</span><span>${esc(s.name)}<small>${esc(s.desc)}</small></span></a>`).join('')}</div></div><div class="detail-section"><div class="section-heading"><h3>${(r.dbSaved||r.curated)?"💬 PostgreSQL 리뷰":"💬 이 기기에 저장된 후기"}</h3><button class="text-btn" id="writeReviewBtn">${r.curated?"검증 평가·사진 후기":r.dbSaved?"DB 리뷰·사진 첨부":"사진 리뷰 +10P"}</button></div><div class="review-list">${reviews.length?reviews.map(rv=>`<div class="review-card"><div class="review-head">${esc(rv.nickname)} <span>${'★'.repeat(rv.rating)}${'☆'.repeat(5-rv.rating)}</span></div><div>${esc(rv.text)}</div>${rv.photo?`<img src="${rv.photo}" alt="사용자 리뷰 사진">`:''}</div>`).join(''):'<div class="empty-state">아직 등록된 후기가 없어요.<br>첫 번째 리뷰를 남겨 주세요.</div>'}</div></div><button class="primary-btn full" id="detailReviewBtn">${r.curated?"검증 평가 작성 / 수정":r.dbSaved?"DB 리뷰 작성 / 사진 추가":"사진 리뷰 작성하고 10P 받기"}</button>`;$('#writeReviewBtn').addEventListener('click',()=>openReview(id));$('#detailReviewBtn').addEventListener('click',()=>openReview(id));
+function openDetail(id){const r=data.recipes.find(x=>x.id===id);if(!r)return;state.selected=id;document.getElementById('detailContent').dataset.curatedKey = r.curated ? r.id : '';const reviews=data.reviews.filter(x=>x.recipeId===id);$('#detailContent').innerHTML=`<div class="detail-hero" style="background:${r.color}"><span>${r.emoji}</span>${r.curated?(r.verification?.verified?'<span class="verified-badge">✓ PICKFOO 내부 검증</span>':'<span class="verified-badge">팀 선정 · 검증 대기</span>'):r.dbSaved?'<span class="verified-badge">사용자 등록 · DB 저장</span>':(r.demoPicked??r.verified)?'<span class="verified-badge">PICKFOO 선정</span>':''}</div><div class="detail-brand">${esc(r.brand)} · ${esc(r.category)}</div><h1 class="detail-title">${esc(r.name)}</h1><p class="detail-intro">${esc(r.desc||'내 취향에 맞게 재료를 조합해 보세요.')}</p><div class="detail-stats"><span>💰 ${pfPriceLabel(r)}</span><span>${r.curated?(r.verification?.adjusted_rating!=null?"보정 평점 ⭐ "+r.verification.adjusted_rating:"보정 평점 미집계"):r.dbSaved?"DB 평균 별점 조회 중…":"예시 평점 ⭐ "+Number(r.rating||0).toFixed(1)+" (가상 수치)"}</span><span>${r.dbSaved?"DB 리뷰 조회 중…":"이 기기의 후기 "+reviews.length+"건"}</span><span>🌶️ ${['안 매움','약간 매움','매움'][r.spicy]||'보통'}</span></div><div class="detail-section"><h3>🧺 필요한 재료</h3><div class="ingredient-list">${r.ingredients.map(i=>`<div class="ingredient">${esc(i)}</div>`).join('')}</div><p class="notice">${r.curated?pfPriceNote(r)+" 알레르기·원재료는 판매처에서 확인하세요.":r.dbSaved?"이 조합·가격·재료는 사용자가 입력한 정보입니다. 실제 판매 여부, 원재료와 알레르기 안전은 확인되지 않았습니다.":r.discovered?pfPriceNote(r)+" 알레르기·원재료는 판매처에서 확인하세요.":"알레르기·원재료는 판매처에서 확인하세요."}</p></div><div class="detail-section"><h3>👩‍🍳 조합 만드는 방법</h3><ol class="step-list">${r.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol></div><div class="detail-section"><h3>🛒 구매하러 가기</h3><div class="shopping-grid">${shops.map(s=>`<a class="shop-link" href="${s.url}" data-shop="${s.id}" rel="noopener noreferrer"><span class="shop-icon">${s.icon}</span><span>${esc(s.name)}<small>${esc(s.desc)}</small></span></a>`).join('')}</div></div><div class="detail-section"><div class="section-heading"><h3>${(r.dbSaved||r.curated)?"💬 PostgreSQL 리뷰":"💬 이 기기에 저장된 후기"}</h3><button class="text-btn" id="writeReviewBtn">${r.curated?"검증 평가·사진 후기":r.dbSaved?"DB 리뷰·사진 첨부":"사진 리뷰 +10P"}</button></div><div class="review-list">${reviews.length?reviews.map(rv=>`<div class="review-card"><div class="review-head">${esc(rv.nickname)} <span>${'★'.repeat(rv.rating)}${'☆'.repeat(5-rv.rating)}</span></div><div>${esc(rv.text)}</div>${rv.photo?`<img src="${rv.photo}" alt="사용자 리뷰 사진">`:''}</div>`).join(''):'<div class="empty-state">아직 등록된 후기가 없어요.<br>첫 번째 리뷰를 남겨 주세요.</div>'}</div></div><button class="primary-btn full" id="detailReviewBtn">${r.curated?"검증 평가 작성 / 수정":r.dbSaved?"DB 리뷰 작성 / 사진 추가":"사진 리뷰 작성하고 10P 받기"}</button>`;$('#writeReviewBtn').addEventListener('click',()=>openReview(id));$('#detailReviewBtn').addEventListener('click',()=>openReview(id));
   // STEP 161: PostgreSQL에 저장된 현재 계정의 조합에만 수정·삭제 버튼을 표시한다.
   if (r.dbSaved === true && Number.isSafeInteger(r.serverRecipeId) && r.serverRecipeId > 0) {
     const actionSection = document.createElement('div');
@@ -1528,6 +1578,7 @@ renderProfile();
 // 서버에서 사용자 음식 취향과 본인 등록 조합, 내 실제 평가 이력 불러오기
 loadDbRecommendationPreferences();
 loadMyDbRecipes();
+void loadDiscoveredRecipes();
 void loadDbRatingHistory();
 // 돌아왔을 때 로그인 계정·평가 수정 사항을 다시 읽습니다.
 document.addEventListener('visibilitychange', () => {

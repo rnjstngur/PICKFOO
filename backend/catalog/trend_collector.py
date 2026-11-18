@@ -285,7 +285,8 @@ def load() -> dict | None:
 # 관련 글 판정 규칙이 바뀌면 올린다. 저장된 결과의 버전이 다르면 24시간이 안 지나도 다시 수집한다.
 # 1: 제목+요약에 단어가 모두 있으면 인정 / 2: 제목, 또는 요약에 붙은 표현만 인정 / 3: 한 단어 조합은 제목만
 # 4: 원문 예시를 제목 일치 글 먼저 (2026-11-10)
-RULE_VERSION = 4
+# 5: 신규 조합 자동 발견을 같은 주기로 실행 — 배포 후 첫 조회 때 바로 한 번 돌도록 올림 (2026-11-18)
+RULE_VERSION = 5
 
 
 def is_stale(result: dict | None, now: datetime | None = None) -> bool:
@@ -311,7 +312,15 @@ def refresh_in_background() -> bool:
             collect()
         except Exception:
             log.exception('트렌드 자동 수집 실패')
+        try:
+            # 같은 주기(24시간)로 넓은 검색어를 돌려 신규 조합 후보를 검토 대기 목록에 쌓는다.
+            from . import trend_discovery
+            trend_discovery.run()
+        except Exception:
+            log.exception('신규 조합 자동 발견 실패')
         finally:
+            from django.db import close_old_connections
+            close_old_connections()  # 백그라운드 스레드의 DB 연결 정리
             _refresh_lock.release()
 
     threading.Thread(target=run, name='pickfoo-trend-collect', daemon=True).start()

@@ -44,7 +44,7 @@
     const items = parts(r.sourceNote);
     const links = items.filter(x => x.url);
     const datedSource = !!(window.PICKFOO_TREND && window.PICKFOO_TREND.CURATED_SOURCES[r.id]);
-    const tag = (links.length || datedSource) ? '🔗 외부 출처 확인' : (r.curated ? '🧪 응용 조합 · 외부 출처 없음' : '👤 사용자 등록 조합');
+    const tag = r.discovered ? '🆕 블로그에서 새로 발견한 조합' : (links.length || datedSource) ? '🔗 외부 출처 확인' : (r.curated ? '🧪 응용 조합 · 외부 출처 없음' : '👤 사용자 등록 조합');
     box.appendChild(el('div', tag, 'font-weight:800;font-size:13px;color:#4a3a2e;margin-bottom:6px;'));
     const T = window.PICKFOO_TREND;
     if (T && r.curated) {
@@ -57,6 +57,11 @@
       const t = T.trendScore({ sourceDate: src ? src.date : null });
       box.appendChild(el('div', `트렌드 분류: ${t.label}${t.age != null ? ` · ${t.age}일 전 소개` : ''} · 외부 최신성 ${t.external.toFixed(1)}/10`,
                          'font-size:12px;font-weight:700;color:#7a4a2a;margin-bottom:6px;'));
+    }
+    if (r.discovered) {
+      const info = `최근 블로그 ${r.mentions || 1}곳에서 언급${r.sourceDate ? ` · 최근 게시 ${r.sourceDate}` : ''} · 관리자 확인 후 공개`;
+      box.appendChild(el('div', info, 'font-size:12px;font-weight:700;color:#3d5a20;margin-bottom:6px;'));
+      if (r.sourceTitle && links[0]) links[0].host = r.sourceTitle.slice(0, 40);
     }
     links.forEach(x => {
       const a = el('a', `${x.host} ↗`, 'display:inline-block;margin:0 8px 6px 0;padding:5px 10px;border-radius:999px;background:#f1e8dc;color:#5a4332;font-size:12px;text-decoration:none;');

@@ -339,3 +339,6 @@ from .curated_models import CuratedCombo, CuratedComboReview
 
 # PICKFOO_STEP240_PRODUCT_LINK_DB
 from .product_link_models import IngredientProductLink
+
+# 신규 조합 자동 발견(2026-11-18)
+from .discovery_models import DiscoveredCombo  # noqa: E402,F401

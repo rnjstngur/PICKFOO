@@ -56,3 +56,6 @@ from . import curated_admin  # noqa: F401
 
 # PICKFOO_STEP240_PRODUCT_LINK_DB
 from .product_link_admin import IngredientProductLinkAdmin
+
+# 신규 조합 자동 발견(2026-11-18)
+from . import discovery_admin  # noqa: E402,F401

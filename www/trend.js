@@ -204,6 +204,7 @@
     return { n, avg: Math.round(avg * 10) / 10, demo: true };
   }
   window.addEventListener('pickfoo-demo-change', () => render());
+  window.addEventListener('pickfoo-discovered-loaded', () => render());
 
   function items() {
     const app = window.PICKFOO_APP;
@@ -220,8 +221,14 @@
       platform: c.platform || 'article', ingredients: c.ingredients || [], accounts: c.accounts || 0,
       reactions: c.reactions || 0, observedAt: c.observedAt || null, sponsored: !!c.sponsored,
       availability: c.availability || 'unverified' }));
+    // 블로그에서 자동 발견하고 관리자가 승인한 조합(app.js loadDiscoveredRecipes)
+    const fromDiscovery = (app && app.recipes ? app.recipes().filter(r => r.discovered) : []).map(r => ({
+      key: r.id, name: r.name, brand: r.brand, inApp: true, discovered: true, sourceDate: r.sourceDate || null,
+      sourceTitle: r.sourceTitle || '', sourceUrl: r.sourceNote || '', reviewers7d: 0, avg7d: 0,
+      platform: 'blog', ingredients: r.ingredients || [], accounts: r.mentions || 0, reactions: 0,
+      observedAt: r.sourceDate || null, sponsored: false, availability: 'unverified' }));
     const sig = (signals && signals.items) || {};
-    return fromApp.concat(fromSources).map(it => T.applySignal(it, sig[it.key], signals && signals.collectedAt));
+    return fromApp.concat(fromDiscovery, fromSources).map(it => T.applySignal(it, sig[it.key], signals && signals.collectedAt));
   }
 
   function render() {
@@ -239,6 +246,10 @@
     } else if (signals && signals.refreshing) {
       col.textContent = '자동 수집: 지금 수집 중이에요. 잠시 후 새로고침하세요.';
     } else col.textContent = '';
+    const disc = window.PICKFOO_DISCOVERY;
+    if (disc && disc.lastRun && disc.lastRun.ranAt) {
+      col.textContent += (col.textContent ? ' · ' : '') + `새 조합 탐색: ${disc.lastRun.ranAt.slice(5, 16).replace('T', ' ')} 블로그 ${disc.lastRun.posts || 0}건 확인`;
+    }
     const shown = ranked.filter(x => mode === 'recent'
       ? (x.trend.kind === 'recent' || x.trend.inApp > 0)
       : mode === 'sns' ? T.isSns(x)
@@ -268,6 +279,7 @@
       }
       meta.append(` ${x.brand} · ${fmtAge(x.trend.age)} · 외부 ${x.trend.external.toFixed(1)} / 앱 반응 ${x.trend.inApp.toFixed(1)} `);
       if (x.signalNote) meta.append(x.signalNote + ' ');
+      if (x.discovered) { const nw = document.createElement('span'); nw.className = 'pt-chip'; nw.style.cssText = 'background:#e3f0d6;color:#3d5a20'; nw.textContent = '🆕 새로 발견'; meta.appendChild(nw); }
       if (x.demo) { const dm = document.createElement('span'); dm.className = 'pt-chip'; dm.style.cssText = 'background:#eee;color:#777;font-size:10px'; dm.textContent = '샘플'; meta.appendChild(dm); }
       if (x.autoCollected) { const ac = document.createElement('span'); ac.className = 'pt-chip'; ac.textContent = '자동 수집'; meta.appendChild(ac); }
       if (T.isSns(x)) {
